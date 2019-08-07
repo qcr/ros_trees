@@ -42,7 +42,7 @@ def get_last_value(leaf=None):
     else:
         result = None
         leaf_old = None
-        while result is None:
+        while leaf is not None and result is None:
             leaf_old = leaf
             leaf = _get_previous_leaf(leaf_old)
             result = get_value(_get_last_result_key(leaf))

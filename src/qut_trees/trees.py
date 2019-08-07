@@ -115,4 +115,4 @@ class BehaviourTree(ptr.trees.BehaviourTree):
             input("Press Enter to start the \"%s\" tree..." % self.tree_name)
         else:
             print("Running \"%s\" tree..." % self.tree_name)
-        self.tree.tick_tock(1000 / hz)
+        self.tick_tock(1000 / hz)
