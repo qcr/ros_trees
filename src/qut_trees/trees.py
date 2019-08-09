@@ -5,6 +5,8 @@ import py_trees_ros as ptr
 import select
 import subprocess32 as subprocess
 import sys
+import time
+from timeit import default_timer as timer
 
 import leaves
 
@@ -105,7 +107,7 @@ class BehaviourTree(ptr.trees.BehaviourTree):
     def run(self, hz=10, push_to_start=True, setup_timeout=5):
         # TODO should maybe not do setup every time... but eh
         if not self.setup(timeout=setup_timeout):
-            self.logger.error(
+            self.root.logger.error(
                 "Failed to setup the \"%s\" tree. Aborting run..." %
                 self.tree_name)
             return False
@@ -115,4 +117,18 @@ class BehaviourTree(ptr.trees.BehaviourTree):
             input("Press Enter to start the \"%s\" tree..." % self.tree_name)
         else:
             print("Running \"%s\" tree..." % self.tree_name)
-        self.tick_tock(1000 / hz)
+
+        # The tick_tock method SLEEPS for period rather than maintaining a
+        # frequency... so instead we just implement the loop properly here
+        # self.tick_tock(1000 / hz)
+        rate = 1.0 / hz
+        while not self.interrupt_tick_tocking:
+            t = timer()
+            self.tick(None, None)
+            remaining = rate - (timer() - t)
+            if remaining > 0:
+                try:
+                    time.sleep(remaining)
+                except KeyboardInterrupt:
+                    break
+        self.interrupt_tick_tocking = False

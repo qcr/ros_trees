@@ -72,6 +72,9 @@ class Leaf(pt.behaviour.Behaviour):
     def _extra_terminate(self, new_status):
         pass
 
+    def _extra_update(self):
+        return None
+
     def _is_leaf_done(self):
         return True
 
@@ -118,6 +121,11 @@ class Leaf(pt.behaviour.Behaviour):
                     if 'SUCCESS' in self.debug.name else pt.Status.FAILURE)
         elif ('INPUT' in self.debug.name):
             return pt.Status.RUNNING
+
+        # Call any extra parts of the update step
+        ret = self._extra_update()
+        if ret != None:
+            return ret
 
         # Either return a running state, or evaluate & return the final result
         if self._is_leaf_done():
