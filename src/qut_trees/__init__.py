@@ -1,11 +1,11 @@
-import data_management
-import debugging
-import composites
-import leaves
-import leaves_ros
-import trees
+from . import data_management
+from . import debugging
+from . import composites
+from . import leaves
+from . import leaves_ros
+from . import trees
 
 __all__ = [
     'data_management', 'debugging', 'composites', 'leaves', 'leaves_ros',
-    'tasks', 'trees'
+    'trees'
 ]

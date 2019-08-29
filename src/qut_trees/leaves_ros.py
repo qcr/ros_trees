@@ -6,8 +6,8 @@ import rospy
 import rosservice
 import rostopic
 
-import data_management as dm
-from leaves import Leaf
+from . import data_management as dm
+from .leaves import Leaf
 
 
 class ActionLeaf(Leaf):
@@ -24,11 +24,9 @@ class ActionLeaf(Leaf):
                 super(ActionLeaf, self)._default_eval_fn(value))
 
     def _default_load_fn(self):
-        data = super(ActionLeaf, self)._default_load_fn()
-        if not isinstance(data, list):
-            data = [data]
-        return type(self._action_class().action_goal.goal)(
-            *([] if data is None else dm.to_fields_list(data)))
+        return dm.auto_generate(
+            super(ActionLeaf, self)._default_load_fn(),
+            type(self._action_class().action_goal.goal))
 
     def _default_result_fn(self):
         return self._action_client.get_result()
@@ -39,9 +37,9 @@ class ActionLeaf(Leaf):
     def _extra_setup(self, timeout):
         # Get a client & type for the Action Server
         self._action_class = roslib.message.get_message_class(
-            re.sub(
-                'Goal$', '',
-                rostopic.get_topic_type(self.action_namespace + '/goal')[0]))
+            re.sub('Goal$', '',
+                   rostopic.get_topic_type(self.action_namespace +
+                                           '/goal')[0]))
         self._action_client = actionlib.SimpleActionClient(
             self.action_namespace, self._action_class)
 
@@ -82,11 +80,9 @@ class ServiceLeaf(Leaf):
         self._service_proxy = None
 
     def _default_load_fn(self):
-        data = super(ServiceLeaf, self)._default_load_fn()
-        if not isinstance(data, list):
-            data = [data]
-        return self._service_class._request_class(
-            *([] if data is None else dm.to_fields_list(data)))
+        return dm.auto_generate(
+            super(ServiceLeaf, self)._default_load_fn(),
+            self._service_class._request_class)
 
     def _default_result_fn(self):
         try:
@@ -102,7 +98,7 @@ class ServiceLeaf(Leaf):
         except rospy.ROSException:
             self.logger.error(
                 "%s.setup() could not find a Service with name \"%s\"" %
-                (self.name, self.service_topic))
+                (self.name, self.service_name))
             return False
 
         # Get the service class type & a service proxy
@@ -122,10 +118,8 @@ class PublisherLeaf(Leaf):
         self._publisher = None
 
     def _default_load_fn(self):
-        data = super(PublisherLeaf, self)._default_load_fn()
-        return (self.topic_class(data)
-                if not isinstance(data, list) else self.topic_class(
-                    *([] if data is None else dm.to_fields_list(data))))
+        return dm.auto_generate(
+            super(PublisherLeaf, self)._default_load_fn(), self.topic_class)
 
     def _default_result_fn(self):
         try:
@@ -144,8 +138,9 @@ class PublisherLeaf(Leaf):
         sub = rospy.Subscriber(self.topic_name, self.topic_class)
         num = sub.get_num_connections()
 
-        self._publisher = rospy.Publisher(
-            self.topic_name, self.topic_class, queue_size=10)
+        self._publisher = rospy.Publisher(self.topic_name,
+                                          self.topic_class,
+                                          queue_size=10)
         while (sub.get_num_connections() <= num and
                rospy.get_time() - t < timeout):
             rospy.sleep(0.05)
@@ -178,8 +173,9 @@ class SubscriberLeaf(Leaf):
                  rospy.get_time() - self._cached_time > self.expiry_time)) and
                rospy.get_time() - t < self.timeout):
             rospy.sleep(0.1)
-        return (None if rospy.get_time() - self._cached_time > self.expiry_time
-                else self._cached_data)
+        return (None if self._cached_time is None or
+                rospy.get_time() - self._cached_time > self.expiry_time else
+                self._cached_data)
 
     def _extra_setup(self, timeout):
         self._subscriber = rospy.Subscriber(self.topic_name, self.topic_class,

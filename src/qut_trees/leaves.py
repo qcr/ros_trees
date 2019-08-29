@@ -1,7 +1,7 @@
 import py_trees as pt
 
-import data_management as dm
-from debugging import DebugMode as DM
+from . import data_management as dm
+from .debugging import DebugMode as DM
 
 
 class Leaf(pt.behaviour.Behaviour):
@@ -122,8 +122,8 @@ class Leaf(pt.behaviour.Behaviour):
         elif ('INPUT' in self.debug.name):
             return pt.Status.RUNNING
 
-        # Call any extra parts of the update step
-        ret = self._extra_update()
+        # Call any extra parts of the update step pylint:
+        ret = self._extra_update()  # pylint: disable=assignment-from-none
         if ret != None:
             return ret
 

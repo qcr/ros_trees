@@ -32,6 +32,56 @@ def _get_last_result_key(leaf):
     return _LAST_RESULT_PREFIX + str(id(leaf))
 
 
+def auto_generate(data, obj_class, empty_if_not_found=True):
+    # Takes some data, & tries really hard to automatically generate
+    # an object of the specified class
+
+    # Extract field values list from whatever mess of data we have been
+    # given...
+    if data is None:
+        field_values = []
+    elif (not hasattr(type(data), '__dict__') or
+          not '__slots__' in type(data).__dict__):
+        field_values = [data]
+    else:
+        field_values = to_fields_list(data)
+
+    # Get a list of field types for the requested class
+    obj_inst = obj_class()
+    field_types = [
+        getattr(obj_inst, a).__class__ for a in obj_class.__dict__['__slots__']
+    ]
+
+    # Get a list of field values
+    # NOTE: generators are cached to handle multiple values of same type (e.g.
+    # if fields_list has two bools & there are two bools in field_types, we
+    # want the first field to get the 1st bool's value, & the second field to
+    # get the 2nd bool's value). We also have to loop back around if we have
+    # more fields than field_values...
+    obj_values = []
+    field_matches = {
+        t: [v for v in field_values if type(v) == t] for t in field_types
+    }
+    field_gens = {t: (v for v in vs) for t, vs in field_matches.items()}
+    for t in field_types:
+        # Attempt to get a value straight up
+        g = field_gens[t]
+        v = next(g, None)
+
+        # Try again from start of the list if we failed
+        if v is None:
+            g = (v for v in field_matches[t])
+            v = next(g, None)
+
+        # Apply the final value (taking a default & resetting the generator if
+        # we still ended up with none...)
+        obj_values.append(t.__class__() if v is None else v)
+        field_gens[t] = (v for v in field_matches[t]) if v is None else g
+
+    # Return an object created from the field values
+    return obj_class(*obj_values)
+
+
 def get_last_value(leaf=None):
     # Generally you want to pass in a leaf, & we will interpret "last result"
     # as the result of the previous leaf in the tree hierarchy. Otherwise we
