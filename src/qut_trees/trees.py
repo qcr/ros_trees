@@ -28,6 +28,7 @@ def _validate_tmp():
 
 
 class BehaviourTree(ptr.trees.BehaviourTree):
+    _LOG_LEVELS = ['INFO', 'DEBUG', 'WARN', 'ERROR']
 
     def __init__(self, tree_name, root):
         super(BehaviourTree, self).__init__(root)
@@ -104,7 +105,15 @@ class BehaviourTree(ptr.trees.BehaviourTree):
                 req_str = "No requirements declared"
             print("\n".join(["\t\t%s" % s for s in req_str.split("\n")]))
 
-    def run(self, hz=10, push_to_start=True, setup_timeout=5):
+    def run(self, hz=10, push_to_start=True, log_level='', setup_timeout=5):
+        # Configure the requested log_level
+        log_level = log_level.upper()
+        if log_level not in BehaviourTree._LOG_LEVELS:
+            raise ValueError("Provided log_level \'%s\' is not supported. "
+                             "Supported values are: %s" %
+                             (log_level, BehaviourTree._LOG_LEVELS))
+        pt.logging.level = pt.logging.Level[log_level]
+
         # TODO should maybe not do setup every time... but eh
         if not self.setup(timeout=setup_timeout):
             self.root.logger.error(
