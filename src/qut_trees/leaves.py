@@ -25,20 +25,27 @@ class Leaf(pt.behaviour.Behaviour):
         self.load = (load if load_value is None and load_key is None else True)
         self.load_value = load_value
         self.load_key = load_key if self.load_value is None else None
-        self.load_fn = self._default_load_fn if load_fn is None else load_fn
+        self.load_fn = (self._default_load_fn
+                        if load_fn is None else self._ensure_bound(load_fn))
         self.loaded_data = None
 
-        self.result_fn = (self._default_result_fn
-                          if result_fn is None else result_fn)
-        self.eval_fn = self._default_eval_fn if eval_fn is None else eval_fn
+        self.result_fn = (self._default_result_fn if result_fn is None else
+                          self._ensure_bound(result_fn))
+        self.eval_fn = (self._default_eval_fn
+                        if eval_fn is None else self._ensure_bound(eval_fn))
 
         self.save = (save if save_value is None and save_key is None else True)
         self.save_value = save_value
         self.save_key = save_key
-        self.save_fn = self._default_save_fn if save_fn is None else save_fn
+        self.save_fn = (self._default_save_fn
+                        if save_fn is None else self._ensure_bound(save_fn))
 
         self.debug = debug
         self._debug_key_received = False
+
+    def _ensure_bound(self, fn):
+        return (fn if hasattr(fn, '__self__') else fn.__get__(
+            self, self.__class__))
 
     def _default_eval_fn(self, value):
         if isinstance(value, list):
