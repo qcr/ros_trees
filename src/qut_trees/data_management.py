@@ -32,7 +32,7 @@ def _get_last_result_key(leaf):
     return _LAST_RESULT_PREFIX + str(id(leaf))
 
 
-def auto_generate(data, obj_class, empty_if_not_found=True):
+def auto_generate(data, obj_class, empty_if_not_found=True, breakdown=True):
     # Takes some data, & tries really hard to automatically generate
     # an object of the specified class
 
@@ -40,7 +40,7 @@ def auto_generate(data, obj_class, empty_if_not_found=True):
     # given...
     if data is None:
         field_values = []
-    elif (not hasattr(type(data), '__dict__') or
+    elif (not breakdown or not hasattr(type(data), '__dict__') or
           not '__slots__' in type(data).__dict__):
         field_values = [data]
     else:
