@@ -15,7 +15,7 @@ try:
 except NameError:
     pass
 
-_TMP_LOCATION = '/tmp/qut_trees'
+_TMP_LOCATION = '/tmp/rv_trees'
 
 
 def _validate_tmp():

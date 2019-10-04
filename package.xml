@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>qut_trees</name>
+  <name>rv_trees</name>
   <version>0.0.0</version>
-  <description>The qut_trees package</description>
+  <description>The rv_trees package</description>
 
   <maintainer email="b.talbot@qut.edu.au">ben</maintainer>
   <license>BSD</license>
