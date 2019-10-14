@@ -141,3 +141,14 @@ class BehaviourTree(ptr.trees.BehaviourTree):
                 except KeyboardInterrupt:
                     break
         self.interrupt_tick_tocking = False
+
+    def visualise(self, image_type='svg'):
+        if image_type not in ['svg', 'png']:
+            raise ValueError(
+                "ERROR: only 'svg' & 'png' image types are supported")
+        _validate_tmp()
+        filename = os.path.join(
+            _TMP_LOCATION,
+            datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
+        pt.display.render_dot_tree(self.root, name=filename)
+        subprocess.call(["xdg-open", filename + '.' + image_type])

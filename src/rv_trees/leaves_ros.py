@@ -71,44 +71,6 @@ class ActionLeaf(Leaf):
         return self._action_client.get_result() is not None
 
 
-class ServiceLeaf(Leaf):
-
-    def __init__(self, name, service_name, *args, **kwargs):
-        super(ServiceLeaf, self).__init__(name, *args, **kwargs)
-        self.service_name = service_name
-        self._service_class = None
-        self._service_proxy = None
-
-    def _default_load_fn(self):
-        return dm.auto_generate(
-            super(ServiceLeaf, self)._default_load_fn(),
-            self._service_class._request_class)
-
-    def _default_result_fn(self):
-        try:
-            return self._service_proxy(self.loaded_data)
-        except Exception as e:
-            self.logger.error("%s.result_fn(): %s" % (self.name, e))
-            return None
-
-    def _extra_setup(self, timeout):
-        # Confirm the service is actually there
-        try:
-            rospy.wait_for_service(self.service_name, timeout)
-        except rospy.ROSException:
-            self.logger.error(
-                "%s.setup() could not find a Service with name \"%s\"" %
-                (self.name, self.service_name))
-            return False
-
-        # Get the service class type & a service proxy
-        self._service_class = rosservice.get_service_class_by_name(
-            self.service_name)
-        self._service_proxy = rospy.ServiceProxy(self.service_name,
-                                                 self._service_class)
-        return True
-
-
 class PublisherLeaf(Leaf):
 
     def __init__(self, name, topic_name, topic_class, *args, **kwargs):
@@ -145,6 +107,44 @@ class PublisherLeaf(Leaf):
                rospy.get_time() - t < timeout):
             rospy.sleep(0.05)
         return sub.get_num_connections() > num
+
+
+class ServiceLeaf(Leaf):
+
+    def __init__(self, name, service_name, *args, **kwargs):
+        super(ServiceLeaf, self).__init__(name, *args, **kwargs)
+        self.service_name = service_name
+        self._service_class = None
+        self._service_proxy = None
+
+    def _default_load_fn(self):
+        return dm.auto_generate(
+            super(ServiceLeaf, self)._default_load_fn(),
+            self._service_class._request_class)
+
+    def _default_result_fn(self):
+        try:
+            return self._service_proxy(self.loaded_data)
+        except Exception as e:
+            self.logger.error("%s.result_fn(): %s" % (self.name, e))
+            return None
+
+    def _extra_setup(self, timeout):
+        # Confirm the service is actually there
+        try:
+            rospy.wait_for_service(self.service_name, timeout)
+        except rospy.ROSException:
+            self.logger.error(
+                "%s.setup() could not find a Service with name \"%s\"" %
+                (self.name, self.service_name))
+            return False
+
+        # Get the service class type & a service proxy
+        self._service_class = rosservice.get_service_class_by_name(
+            self.service_name)
+        self._service_proxy = rospy.ServiceProxy(self.service_name,
+                                                 self._service_class)
+        return True
 
 
 class SubscriberLeaf(Leaf):

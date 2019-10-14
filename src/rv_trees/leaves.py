@@ -13,11 +13,11 @@ class Leaf(pt.behaviour.Behaviour):
                  load_key=None,
                  load_fn=None,
                  result_fn=None,
-                 eval_fn=None,
                  save=False,
                  save_value=None,
                  save_key=None,
                  save_fn=None,
+                 eval_fn=None,
                  debug=DM.OFF):
         super(Leaf, self).__init__(name)
 
@@ -129,7 +129,7 @@ class Leaf(pt.behaviour.Behaviour):
         elif ('INPUT' in self.debug.name):
             return pt.Status.RUNNING
 
-        # Call any extra parts of the update step pylint:
+        # Call any extra parts of the update step
         ret = self._extra_update()  # pylint: disable=assignment-from-none
         if ret != None:
             return ret
