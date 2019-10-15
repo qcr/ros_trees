@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rv_trees</name>
+  <version>0.0.0</version>
+  <description>The rv_trees package</description>
+
+  <maintainer email="b.talbot@qut.edu.au">ben</maintainer>
+  <license>BSD</license>
+
+  <url type="website">http://robotics.qut.edu.au</url>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <exec_depend>rospy</exec_depend>
+  <exec_depend>py_trees</exec_depend>
+  <exec_depend>py_trees_ros</exec_depend>
+
+  <export>
+  </export>
+</package>
