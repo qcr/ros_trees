@@ -1,6 +1,6 @@
 # RV Trees Package
 
-RV Trees contains custom implementations & extensions of the behaviour trees defined in [py_trees](https://py-trees.readthedocs.io/en/devel/). This package gives us all of the ground-level features & functionality needed to use behaviour trees extensively in our research projects. The classes in this package are a base to help build behaviour trees for solving tasks, but in general should not be expanded or changed. See [the README of rv_trees](https://bitbucket.org/acrv/rv_trees/src/master/) for full details & an example of how to get a robot solving a task using trees.
+RV Trees contains custom implementations & extensions of the behaviour trees defined in [py_trees](https://py-trees.readthedocs.io/en/devel/). This package gives us all of the ground-level features & functionality needed to use behaviour trees extensively in our research projects. The classes in this package are a base to help build behaviour trees for solving tasks, but in general should not be expanded or changed. See [the README of rv_tasks](https://bitbucket.org/acrv/rv_tasks/src/master/) for full details & an example of how to get a robot solving a task using trees.
 
 The main contribution of this package is a structured, consistent, and flexible definition for the internals of a leaf. By defining this here, we have a common base that "automagically" handles a large majority of the challenges in passing data & linking components in a behaviour tree.
 
@@ -129,7 +129,7 @@ The `SubscriberLeaf` class defines four extra parameters:
 
 Below are some basic examples of how to write your own leaves (note: any leaf can be written as an instance or class, with class being generally preferred). There are a tonne more examples in `rv_tasks.common_leaves.*`.
 
-A `Leaf` which does not accept any input data, and saves the result so the next leaf can access it via `data_management.get_last_value()`:
+A `Leaf` which does not accept any input data, and saves the result (output of `leaf.result_fn()`) so the next leaf can access it via `data_management.get_last_value()`:
 
 ```python
 data_generator_leaf = Leaf("Data Generator", load=False, save=True)
@@ -142,13 +142,13 @@ inverted_leaf = Leaf(
     "Inverted", eval_fn=lambda leaf, value: not leaf._default_eval_fn(value))
 ```
 
-A `SubscriberLeaf` whose data on `'/unavailable'` is not yet ready for use, so instead it will instantly return failure via debug mode:
+A `SubscriberLeaf` whose data on `'/camera/image_raw'` is not yet ready for use (we don't yet have the camera), so instead it will instantly return failure via debug mode:
 
 ```python
-fail_debug_leaf = SubscriberLeaf("Debug fail",
-                                 topic_name='/unavailable',
-                                 topic_class=None,
-                                 debug=debugging.DebugMode.INSTANT_FAILURE)
+camera_leaf = SubscriberLeaf("Camera",
+                             topic_name='/camera/image_raw',
+                             topic_class=sensor_msgs.Image,
+                             debug=debugging.DebugMode.INSTANT_FAILURE)
 ```
 
 An `ActionLeaf` calling a `'/move_to_location'` ROS Action Server to move an arm `'home'`, & saves `True` as the result indicating it always succeeds:
