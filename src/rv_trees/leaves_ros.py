@@ -98,8 +98,8 @@ class PublisherLeaf(Leaf):
         # one ROS...)
         t = rospy.get_time()
         sub = rospy.Subscriber(self.topic_name, self.topic_class)
-        num = sub.get_num_connections()
-
+        num = 0 #sub.get_num_connections()
+        
         self._publisher = rospy.Publisher(self.topic_name,
                                           self.topic_class,
                                           queue_size=10)
@@ -174,7 +174,7 @@ class SubscriberLeaf(Leaf):
                rospy.get_time() - t < self.timeout):
             rospy.sleep(0.1)
         return (None if self._cached_time is None or
-                rospy.get_time() - self._cached_time > self.expiry_time else
+                (self.expiry_time and rospy.get_time() - self._cached_time > self.expiry_time) else
                 self._cached_data)
 
     def _extra_setup(self, timeout):
