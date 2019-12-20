@@ -105,7 +105,7 @@ class BehaviourTree(ptr.trees.BehaviourTree):
                 req_str = "No requirements declared"
             print("\n".join(["\t\t%s" % s for s in req_str.split("\n")]))
 
-    def run(self, hz=10, push_to_start=True, log_level='', setup_timeout=5):
+    def run(self, hz=10, push_to_start=True, log_level='', setup_timeout=5, exit_on=None):
         # Configure the requested log_level
         log_level = log_level.upper()
         if log_level not in BehaviourTree._LOG_LEVELS:
@@ -132,6 +132,9 @@ class BehaviourTree(ptr.trees.BehaviourTree):
         # self.tick_tock(1000 / hz)
         rate = 1.0 / hz
         while not self.interrupt_tick_tocking:
+            if (exit_on and self.root.status == exit_on):
+              break
+
             t = timer()
             self.tick(None, None)
             remaining = rate - (timer() - t)
