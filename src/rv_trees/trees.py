@@ -29,16 +29,21 @@ def _validate_tmp():
 
 class BehaviourTree(ptr.trees.BehaviourTree):
     _LOG_LEVELS = ['INFO', 'DEBUG', 'WARN', 'ERROR']
+    _current = None
 
     def __init__(self, tree_name, root):
-        super(BehaviourTree, self).__init__(root)
+        if not BehaviourTree._current is None:
+            raise Exception('Multiple instances of BehaviourTree not supported.')
 
+        super(BehaviourTree, self).__init__(root)
         self.tree_name = tree_name
 
         # Configure the tree to capture keyboard input & pass it down to leaves
         # that are in the debugging mode that awaits input
         self._cached_input_leaves = self._get_debug_input_leaves()
         self.add_pre_tick_handler(self._pre_tick)
+
+        BehaviourTree._current = self
 
     def _cleanup(self):
         # We extend their cleanup method (run at shutdown) because it didn't
@@ -105,7 +110,7 @@ class BehaviourTree(ptr.trees.BehaviourTree):
                 req_str = "No requirements declared"
             print("\n".join(["\t\t%s" % s for s in req_str.split("\n")]))
 
-    def run(self, hz=10, push_to_start=True, log_level='', setup_timeout=5, exit_on=None):
+    def run(self, hz=10, push_to_start=True, log_level='INFO', setup_timeout=5, exit_on=None):
         # Configure the requested log_level
         log_level = log_level.upper()
         if log_level not in BehaviourTree._LOG_LEVELS:
@@ -155,3 +160,7 @@ class BehaviourTree(ptr.trees.BehaviourTree):
             datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
         pt.display.render_dot_tree(self.root, name=filename)
         subprocess.call(["xdg-open", filename + '.' + image_type])
+
+    @staticmethod
+    def get():
+      return BehaviourTree._current

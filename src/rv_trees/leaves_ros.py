@@ -14,7 +14,7 @@ class ActionLeaf(Leaf):
 
     def __init__(self, name, action_namespace, *args, **kwargs):
         super(ActionLeaf, self).__init__(name, *args, **kwargs)
-        self.action_namespace = action_namespace
+        self.action_namespace = action_namespace if action_namespace.startswith('/') else '/{}'.format(action_namespace)
         self._action_class = None
         self._action_client = None
         self.sent_goal = False
@@ -104,15 +104,15 @@ class PublisherLeaf(Leaf):
                                           self.topic_class,
                                           queue_size=10)
         while (sub.get_num_connections() <= num and
-               rospy.get_time() - t < timeout):
+               (timeout == 0 or rospy.get_time() - t < timeout)):
             rospy.sleep(0.05)
         return sub.get_num_connections() > num
 
 
 class ServiceLeaf(Leaf):
 
-    def __init__(self, name, service_name, *args, **kwargs):
-        super(ServiceLeaf, self).__init__(name, *args, **kwargs)
+    def __init__(self, name, service_name, save=True, *args, **kwargs):
+        super(ServiceLeaf, self).__init__(name, save=save, *args, **kwargs)
         self.service_name = service_name
         self._service_class = None
         self._service_proxy = None
@@ -155,9 +155,10 @@ class SubscriberLeaf(Leaf):
                  topic_class,
                  expiry_time=None,
                  timeout=3.0,
+                 save=True,
                  *args,
                  **kwargs):
-        super(SubscriberLeaf, self).__init__(name, *args, **kwargs)
+        super(SubscriberLeaf, self).__init__(name, save=save, *args, **kwargs)
         self.topic_name = topic_name
         self.topic_class = topic_class
         self.expiry_time = expiry_time
