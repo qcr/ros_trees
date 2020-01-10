@@ -132,7 +132,7 @@ class ServiceLeaf(Leaf):
     def _extra_setup(self, timeout):
         # Confirm the service is actually there
         try:
-            rospy.wait_for_service(self.service_name, timeout if timeout else)
+            rospy.wait_for_service(self.service_name, timeout if timeout else None)
         except rospy.ROSException:
             self.logger.error(
                 "%s.setup() could not find a Service with name \"%s\"" %
