@@ -75,7 +75,7 @@ def auto_generate(data, obj_class, empty_if_not_found=True, breakdown=True):
 
         # Apply the final value (taking a default & resetting the generator if
         # we still ended up with none...)
-        obj_values.append(t.__class__() if v is None else v)
+        obj_values.append(t() if v is None else v)
         field_gens[t] = (v for v in field_matches[t]) if v is None else g
 
     # Return an object created from the field values
