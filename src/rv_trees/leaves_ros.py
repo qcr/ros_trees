@@ -98,15 +98,16 @@ class PublisherLeaf(Leaf):
         # one ROS...)
         t = rospy.get_time()
         sub = rospy.Subscriber(self.topic_name, self.topic_class)
-        num = 0 #sub.get_num_connections()
         
         self._publisher = rospy.Publisher(self.topic_name,
                                           self.topic_class,
                                           queue_size=10)
-        while (sub.get_num_connections() <= num and
-               (timeout == 0 or rospy.get_time() - t < timeout)):
+        
+        while (self._publisher.get_num_connections() == 0 and
+            (timeout == 0 or rospy.get_time() - t < timeout)):
             rospy.sleep(0.05)
-        return sub.get_num_connections() > num
+        
+        return self._publisher.get_num_connections() > 0
 
 
 class ServiceLeaf(Leaf):
