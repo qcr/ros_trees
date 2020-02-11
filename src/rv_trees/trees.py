@@ -110,14 +110,17 @@ class BehaviourTree(ptr.trees.BehaviourTree):
                 req_str = "No requirements declared"
             print("\n".join(["\t\t%s" % s for s in req_str.split("\n")]))
 
-    def run(self, hz=10, push_to_start=True, log_level='INFO', setup_timeout=5, exit_on=None):
+    def run(self, hz=10, push_to_start=True, log_level=None, setup_timeout=5, exit_on=None):
         # Configure the requested log_level
-        log_level = log_level.upper()
-        if log_level not in BehaviourTree._LOG_LEVELS:
-            raise ValueError("Provided log_level \'%s\' is not supported. "
-                             "Supported values are: %s" %
-                             (log_level, BehaviourTree._LOG_LEVELS))
-        pt.logging.level = pt.logging.Level[log_level]
+        if log_level:
+            log_level = log_level.upper()
+
+            if not log_level in BehaviourTree._LOG_LEVELS:
+                raise ValueError("Provided log_level \'%s\' is not supported. "
+                                "Supported values are: %s" %
+                                (log_level, BehaviourTree._LOG_LEVELS))
+        
+            pt.logging.level = pt.logging.Level[log_level]
 
         # TODO should maybe not do setup every time... but eh
         if not self.setup(timeout=setup_timeout):
