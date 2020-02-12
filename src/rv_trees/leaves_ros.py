@@ -5,6 +5,7 @@ import roslib
 import rospy
 import rosservice
 import rostopic
+import message_filters
 
 from . import data_management as dm
 from .leaves import Leaf
@@ -187,3 +188,51 @@ class SubscriberLeaf(Leaf):
     def callback(self, msg):
         self._cached_data = msg
         self._cached_time = rospy.get_time()
+
+class SyncedSubscriberLeaf(Leaf):
+    def __init__(self,
+                 name,
+                 topic_names,
+                 topic_classes,
+                 expiry_time=None,
+                 timeout=3.0,
+                 save=True,
+                 *args,
+                 **kwargs):
+        super(SyncedSubscriberLeaf, self).__init__(name, save=save, *args, **kwargs)
+
+        if not (isinstance(topic_names, list) or isinstance(topic_names, tuple)) or len(topic_names) != len(topic_classes):
+            raise ValueError('topic_names length does not equal topic_classes length')
+
+        self.topic_names = topic_names
+        self.topic_classes = topic_classes
+        self.expiry_time = expiry_time
+        self.timeout = timeout
+        self._filter = None
+        self._subscribers = [None] * len(topic_names)
+        self._cached_data = [None] * len(topic_names)
+        self._cached_time = None
+
+    def _default_result_fn(self):
+        t = rospy.get_time()
+        while ((self._cached_time is None or
+                (self.expiry_time is not None and
+                 rospy.get_time() - self._cached_time > self.expiry_time)) and
+               rospy.get_time() - t < self.timeout):
+            rospy.sleep(0.1)
+        return (None if self._cached_time is None or
+                (self.expiry_time and rospy.get_time() - self._cached_time > self.expiry_time) else
+                self._cached_data)
+
+    def _extra_setup(self, timeout):
+        self._subscribers = [ message_filters.Subscriber(topic_name, self.topic_classes[idx]) 
+            for idx, topic_name in enumerate(self.topic_names) ]
+        self._filter = message_filters.ApproximateTimeSynchronizer(self._subscribers, 10, 0.1, allow_headerless=True)
+        self._filter.registerCallback(self.callback)
+        return True
+
+    def callback(self, *msgs):
+        for idx, msg in enumerate(msgs):
+            self._cached_data[idx] = msg
+        self._cached_time = rospy.get_time()
+

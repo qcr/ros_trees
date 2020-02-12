@@ -83,7 +83,7 @@ class BehaviourTree(ptr.trees.BehaviourTree):
         # Consume the input, & trigger leaves in the appropriate debug mode
         # TODO maybe should only set _debug_advance for the tip()?
         sys.stdin.readline()
-        for l in self._cached_debug_input_leaves:
+        for l in self._cached_input_leaves:
             l._debug_advance = True
 
     def dump_tree_graph(self,
