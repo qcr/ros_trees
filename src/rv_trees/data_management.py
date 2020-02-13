@@ -36,21 +36,21 @@ def auto_generate(data, obj_class, empty_if_not_found=True, breakdown=True):
     # Takes some data, & tries really hard to automatically generate
     # an object of the specified class
 
-    # Extract field values list from whatever mess of data we have been
-    # given...
-    if data is None:
-        field_values = []
-    elif (not breakdown or not hasattr(type(data), '__dict__') or
-          not '__slots__' in type(data).__dict__):
-        field_values = [data]
-    else:
-        field_values = to_fields_list(data)
-
     # Get a list of field types for the requested class
     obj_inst = obj_class()
     field_types = [
         getattr(obj_inst, a).__class__ for a in obj_class.__dict__['__slots__']
     ]
+
+    # Extract field values list from whatever mess of data we have been
+    # given...   
+    if data is None:
+        field_values = []
+    elif type(data) in field_types or not (hasattr(data, '__dict__') or hasattr(data, '__slots__')) or not breakdown:
+        field_values = [data]
+    else:
+        field_values = to_fields_list(data)
+
 
     # Get a list of field values
     # NOTE: generators are cached to handle multiple values of same type (e.g.
