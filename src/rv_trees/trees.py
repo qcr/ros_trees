@@ -29,16 +29,21 @@ def _validate_tmp():
 
 class BehaviourTree(ptr.trees.BehaviourTree):
     _LOG_LEVELS = ['INFO', 'DEBUG', 'WARN', 'ERROR']
+    _current = None
 
     def __init__(self, tree_name, root):
-        super(BehaviourTree, self).__init__(root)
+        if not BehaviourTree._current is None:
+            raise Exception('Multiple instances of BehaviourTree not supported.')
 
+        super(BehaviourTree, self).__init__(root)
         self.tree_name = tree_name
 
         # Configure the tree to capture keyboard input & pass it down to leaves
         # that are in the debugging mode that awaits input
         self._cached_input_leaves = self._get_debug_input_leaves()
         self.add_pre_tick_handler(self._pre_tick)
+
+        BehaviourTree._current = self
 
     def _cleanup(self):
         # We extend their cleanup method (run at shutdown) because it didn't
@@ -78,7 +83,7 @@ class BehaviourTree(ptr.trees.BehaviourTree):
         # Consume the input, & trigger leaves in the appropriate debug mode
         # TODO maybe should only set _debug_advance for the tip()?
         sys.stdin.readline()
-        for l in self._cached_debug_input_leaves:
+        for l in self._cached_input_leaves:
             l._debug_advance = True
 
     def dump_tree_graph(self,
@@ -105,14 +110,17 @@ class BehaviourTree(ptr.trees.BehaviourTree):
                 req_str = "No requirements declared"
             print("\n".join(["\t\t%s" % s for s in req_str.split("\n")]))
 
-    def run(self, hz=10, push_to_start=True, log_level='', setup_timeout=5):
+    def run(self, hz=10, push_to_start=True, log_level=None, setup_timeout=5, exit_on=None):
         # Configure the requested log_level
-        log_level = log_level.upper()
-        if log_level not in BehaviourTree._LOG_LEVELS:
-            raise ValueError("Provided log_level \'%s\' is not supported. "
-                             "Supported values are: %s" %
-                             (log_level, BehaviourTree._LOG_LEVELS))
-        pt.logging.level = pt.logging.Level[log_level]
+        if log_level:
+            log_level = log_level.upper()
+
+            if not log_level in BehaviourTree._LOG_LEVELS:
+                raise ValueError("Provided log_level \'%s\' is not supported. "
+                                "Supported values are: %s" %
+                                (log_level, BehaviourTree._LOG_LEVELS))
+        
+            pt.logging.level = pt.logging.Level[log_level]
 
         # TODO should maybe not do setup every time... but eh
         if not self.setup(timeout=setup_timeout):
@@ -132,6 +140,9 @@ class BehaviourTree(ptr.trees.BehaviourTree):
         # self.tick_tock(1000 / hz)
         rate = 1.0 / hz
         while not self.interrupt_tick_tocking:
+            if (exit_on and self.root.status == exit_on):
+              break
+
             t = timer()
             self.tick(None, None)
             remaining = rate - (timer() - t)
@@ -152,3 +163,7 @@ class BehaviourTree(ptr.trees.BehaviourTree):
             datetime.datetime.now().strftime('%Y%m%d_%H%M%S'))
         pt.display.render_dot_tree(self.root, name=filename)
         subprocess.call(["xdg-open", filename + '.' + image_type])
+
+    @staticmethod
+    def get():
+      return BehaviourTree._current
