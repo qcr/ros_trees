@@ -24,10 +24,13 @@ class ActionLeaf(Leaf):
         return (self._action_client.get_state() == GoalStatus.SUCCEEDED and
                 super(ActionLeaf, self)._default_eval_fn(value))
 
-    def _default_load_fn(self):
-        return dm.auto_generate(
-            super(ActionLeaf, self)._default_load_fn(),
-            type(self._action_class().action_goal.goal))
+    def _default_load_fn(self, auto_generate=True):
+        if auto_generate:
+          return dm.auto_generate(
+              super(ActionLeaf, self)._default_load_fn(),
+              type(self._action_class().action_goal.goal))
+        else:
+          return super(ActionLeaf, self)._default_load_fn()
 
     def _default_result_fn(self):
         return self._action_client.get_result()
@@ -80,9 +83,12 @@ class PublisherLeaf(Leaf):
         self.topic_class = topic_class
         self._publisher = None
 
-    def _default_load_fn(self):
-        return dm.auto_generate(
-            super(PublisherLeaf, self)._default_load_fn(), self.topic_class)
+    def _default_load_fn(self, auto_generate=True):
+        if auto_generate:
+          return dm.auto_generate(
+              super(PublisherLeaf, self)._default_load_fn(), self.topic_class)
+        else:
+          return super(PublisherLeaf, self)._default_load_fn()
 
     def _default_result_fn(self):
         try:
@@ -119,10 +125,13 @@ class ServiceLeaf(Leaf):
         self._service_class = None
         self._service_proxy = None
 
-    def _default_load_fn(self):
-        return dm.auto_generate(
-            super(ServiceLeaf, self)._default_load_fn(),
-            self._service_class._request_class)
+    def _default_load_fn(self, auto_generate=True):
+        if auto_generate:
+          return dm.auto_generate(
+              super(ServiceLeaf, self)._default_load_fn(),
+              self._service_class._request_class)
+        else:
+          return super(ServiceLeaf, self)._default_load_fn()
 
     def _default_result_fn(self):
         try:
