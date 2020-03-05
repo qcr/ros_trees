@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>rv_trees</name>
-  <version>0.0.0</version>
+  <version>1.0.0</version>
   <description>The rv_trees package</description>
 
-  <maintainer email="b.talbot@qut.edu.au">ben</maintainer>
+  <maintainer email="b.talbot@qut.edu.au">Ben</maintainer>
+  <maintainer email="g.suddrey@qut.edu.au">Gavin Suddrey</maintainer>
   <license>BSD</license>
 
   <url type="website">http://robotics.qut.edu.au</url>
