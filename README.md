@@ -6,7 +6,7 @@
 
 # RV Trees: Easy Behaviour Trees with ROS
 
-RV Trees contains custom implementations & extensions of the behaviour trees defined in [py_trees](https://py-trees.readthedocs.io/en/devel/). This package gives us all of the ground-level features & functionality needed to use behaviour trees extensively in our research projects. The classes in this package are a base to help build behaviour trees for solving tasks, but in general should not be expanded or changed. See [the README of rv_tasks](https://bitbucket.org/acrv/rv_tasks/src/master/) for full details & an example of how to get a robot solving a task using trees.
+RV Trees contains custom implementations & extensions of the behaviour trees defined in [py_trees](https://py-trees.readthedocs.io/en/devel/). This package gives us all of the ground-level features & functionality needed to use behaviour trees extensively in our research projects. The classes in this package are a base to help build behaviour trees for solving tasks, but in general should not be expanded or changed. See [the tutorial](https://github.com/RoboticVisionOrg/rv_trees/wiki/Tutorial:-Binning-Bottles-with-RV-Trees) for an example of solving a robotics task using trees.
 
 The main contribution of this package is a structured, consistent, and flexible definition for the internals of a leaf. By defining this here, we have a common base that "automagically" handles a large majority of the challenges in passing data & linking components in a behaviour tree.
 
