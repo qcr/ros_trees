@@ -44,7 +44,62 @@ ROS can be a bit torturous when it comes to passing data between processes. For 
 
 Deviating from using the `rv_trees.data_management.auto_generate()` style of working with inputs is extremely inflexible, and will make a leaf that will probably only ever be usable by you; **that defeats the purpose of these abstracted leaves!**
 
-## How to Write Good Leaves
+### Basic Examples
+
+Below are some basic examples of how to write your own leaves (note: any leaf can be written as an instance or class, with class being generally preferred). There are a tonne more examples in `rv_tasks.common_leaves.*`.
+
+A `Leaf` which does not accept any input data, and saves the result (output of `leaf.result_fn()`) so the next leaf can access it via `data_management.get_last_value()`:
+
+```python
+data_generator_leaf = Leaf("Data Generator", load=False, save=True)
+```
+
+A `Leaf` which swaps success results for failures & vice versa (note: usually you would use [py_trees.decorators](https://py-trees.readthedocs.io/en/devel/decorators.html) for this):
+
+```python
+inverted_leaf = Leaf(
+    "Inverted", eval_fn=lambda leaf, value: not leaf._default_eval_fn(value))
+```
+
+A `SubscriberLeaf` whose data on `'/camera/image_raw'` is not yet ready for use (we don't yet have the camera), so instead it will instantly return failure via debug mode:
+
+```python
+camera_leaf = SubscriberLeaf("Camera",
+                             topic_name='/camera/image_raw',
+                             topic_class=sensor_msgs.Image,
+                             debug=debugging.DebugMode.INSTANT_FAILURE)
+```
+
+An `ActionLeaf` calling a `'/move_to_location'` ROS Action Server to move an arm `'home'`, & saves `True` as the result indicating it always succeeds:
+
+```python
+move_home_leaf = ActionLeaf("Move home",
+                            action_namespace='/move_to_location',
+                            load_value='home',
+                            save=True,
+                            save_value=True)
+```
+
+A `ServiceLeaf` calling a `'/detect_objects'` ROS Service by taking in an RGB image saved in key `'rgb_image'`, & returning the first object in the list of returned objects:
+
+```python
+def first_object(leaf):
+    return leaf._default_result_fn[0]
+
+
+first_object_leaf = ServiceLeaf("Get first object",
+                                service_name='/detect_objects',
+                                load_key='rgb_image',
+                                result_fn=first_object)
+# or
+first_object_leaf = ServiceLeaf(
+    "Get first object",
+    service_name='/detect_objects',
+    load_key='rgb_image',
+    result_fn=lambda leaf: leaf._default_result_fn[0])
+```
+
+### Writing Good Leaves
 
 Following on from above, a good leaf is a leaf that is as general purpose as physically possible given what it does. It may be impossible to write a leaf that can perform object detection without an input image, but your leaf should be written to work with any type of input that contains an image. To achieve this, the following are some good guidelines to stick by:
 
@@ -55,7 +110,7 @@ Following on from above, a good leaf is a leaf that is as general purpose as phy
 - Making changes to leaves here (in particularly `Leaf`) affects every leaf ever written by anyone... that should be weighed up when considering whether it is easier to just implement what you want in your own leaf.
 - To make sure people use your leaves (once you're sure it's usable), include it in the appropriate part of `rv_tasks.common_leaves.*`
 
-## Leaf Parameter Descriptions
+## Leaf Parameterisation Documentation
 
 Here we describe each of the input arguments to the leaf classes. Note that all classes have the `Leaf` class arguments as they extend from it. If you need any more details, feel free to dig into the class implementations.
 
@@ -130,59 +185,4 @@ The `SubscriberLeaf` class defines four extra parameters:
 - **`topic_class`**: the type of message that leaf will expect to receive (required)
 - **`expiry_time`**: the time after which a message is deemed to have expired & is deemed to old to be returned by the leaf (default = `None`). No value means all messages will be considered.
 - **`timeout`**: the max time the leaf will wait before declaring nothing was received (default=`3.0`)
-
-## Basic Examples
-
-Below are some basic examples of how to write your own leaves (note: any leaf can be written as an instance or class, with class being generally preferred). There are a tonne more examples in `rv_tasks.common_leaves.*`.
-
-A `Leaf` which does not accept any input data, and saves the result (output of `leaf.result_fn()`) so the next leaf can access it via `data_management.get_last_value()`:
-
-```python
-data_generator_leaf = Leaf("Data Generator", load=False, save=True)
-```
-
-A `Leaf` which swaps success results for failures & vice versa (note: usually you would use [py_trees.decorators](https://py-trees.readthedocs.io/en/devel/decorators.html) for this):
-
-```python
-inverted_leaf = Leaf(
-    "Inverted", eval_fn=lambda leaf, value: not leaf._default_eval_fn(value))
-```
-
-A `SubscriberLeaf` whose data on `'/camera/image_raw'` is not yet ready for use (we don't yet have the camera), so instead it will instantly return failure via debug mode:
-
-```python
-camera_leaf = SubscriberLeaf("Camera",
-                             topic_name='/camera/image_raw',
-                             topic_class=sensor_msgs.Image,
-                             debug=debugging.DebugMode.INSTANT_FAILURE)
-```
-
-An `ActionLeaf` calling a `'/move_to_location'` ROS Action Server to move an arm `'home'`, & saves `True` as the result indicating it always succeeds:
-
-```python
-move_home_leaf = ActionLeaf("Move home",
-                            action_namespace='/move_to_location',
-                            load_value='home',
-                            save=True,
-                            save_value=True)
-```
-
-A `ServiceLeaf` calling a `'/detect_objects'` ROS Service by taking in an RGB image saved in key `'rgb_image'`, & returning the first object in the list of returned objects:
-
-```python
-def first_object(leaf):
-    return leaf._default_result_fn[0]
-
-
-first_object_leaf = ServiceLeaf("Get first object",
-                                service_name='/detect_objects',
-                                load_key='rgb_image',
-                                result_fn=first_object)
-# or
-first_object_leaf = ServiceLeaf(
-    "Get first object",
-    service_name='/detect_objects',
-    load_key='rgb_image',
-    result_fn=lambda leaf: leaf._default_result_fn[0])
-```
 
