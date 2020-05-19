@@ -1,4 +1,10 @@
-# RV Trees Package
+<p align="center">
+<strong>
+~ Just getting started with RV Trees? Our <a href="https://github.com/RoboticVisionOrg/rv_trees/wiki/Tutorial:-Binning-Bottles-with-RV-Trees">tutorial</a> is a great place to start ~
+</strong>
+</p>
+
+# RV Trees: Easy Behaviour Trees with ROS
 
 RV Trees contains custom implementations & extensions of the behaviour trees defined in [py_trees](https://py-trees.readthedocs.io/en/devel/). This package gives us all of the ground-level features & functionality needed to use behaviour trees extensively in our research projects. The classes in this package are a base to help build behaviour trees for solving tasks, but in general should not be expanded or changed. See [the README of rv_tasks](https://bitbucket.org/acrv/rv_tasks/src/master/) for full details & an example of how to get a robot solving a task using trees.
 
