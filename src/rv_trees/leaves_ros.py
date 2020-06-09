@@ -90,9 +90,9 @@ class PublisherLeaf(Leaf):
         else:
           return super(PublisherLeaf, self)._default_load_fn()
 
-    def _default_result_fn(self):
+    def _default_result_fn(self, custom_data=None):
         try:
-            self._publisher.publish(self.loaded_data)
+            self._publisher.publish(custom_data if custom_data is not None else self.loaded_data)
             return True
         except Exception as e:
             self.logger.error("%s.result_fn(): %s" % (self.name, e))
@@ -133,9 +133,9 @@ class ServiceLeaf(Leaf):
         else:
           return super(ServiceLeaf, self)._default_load_fn()
 
-    def _default_result_fn(self):
+    def _default_result_fn(self, custom_data=None):
         try:
-            return self._service_proxy(self.loaded_data)
+            return self._service_proxy(custom_data if custom_data is not None else self.loaded_data)
         except Exception as e:
             self.logger.error("%s.result_fn(): %s" % (self.name, e))
             return None
