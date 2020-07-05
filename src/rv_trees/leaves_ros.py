@@ -40,12 +40,15 @@ class ActionLeaf(Leaf):
 
     def _extra_setup(self, timeout):
         # Get a client & type for the Action Server
-        self._action_class = roslib.message.get_message_class(
-            re.sub('Goal$', '',
-                   rostopic.get_topic_type(self.action_namespace +
-                                           '/goal')[0]))
-        self._action_client = actionlib.SimpleActionClient(
-            self.action_namespace, self._action_class)
+        try:
+          self._action_class = roslib.message.get_message_class(
+              re.sub('Goal$', '',
+                    rostopic.get_topic_type(self.action_namespace +
+                                            '/goal')[0]))
+          self._action_client = actionlib.SimpleActionClient(
+              self.action_namespace, self._action_class)
+        except:
+          raise Exception('Failed to set up action client for server: {}'.format(self.action_namespace))
 
         # Confirm the action client is actually there
         if not self._action_client.wait_for_server(rospy.Duration(timeout)):
