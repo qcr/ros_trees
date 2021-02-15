@@ -13,9 +13,6 @@ jobs:
           - os: ubuntu-20.04
             python-version: 3.8
             ros-distro: noetic
-          - os: ubuntu-18.04
-            python-version: 2.7
-            ros-distro: melodic
     steps:
     - uses: actions/checkout@v2
       with:
