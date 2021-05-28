@@ -1,12 +1,12 @@
 <p align="center">
 <strong>
-~ Just getting started with RV Trees? Our <a href="https://github.com/RoboticVisionOrg/rv_trees/wiki/Tutorial:-Binning-Bottles-with-RV-Trees">tutorial</a> is a great place to start ~
+~ Just getting started with ROS Trees? Our <a href="https://github.com/qcr/ros_trees/wiki/Tutorial:-Binning-Bottles-with-ROS-Trees">tutorial</a> is a great place to start ~
 </strong>
 </p>
 
-# RV Trees: Easy Behaviour Trees with ROS
+# ROS Trees: Easy Behaviour Trees with ROS
 
-RV Trees contains custom implementations & extensions of the behaviour trees defined in [py_trees](https://py-trees.readthedocs.io/en/devel/). This package gives us all of the ground-level features & functionality needed to use behaviour trees extensively in our research projects. The classes in this package are a base to help build behaviour trees for solving tasks, but in general should not be expanded or changed. See [the tutorial](https://github.com/RoboticVisionOrg/rv_trees/wiki/Tutorial:-Binning-Bottles-with-RV-Trees) for an example of solving a robotics task using trees.
+ROS Trees contains custom implementations & extensions of the behaviour trees defined in [py_trees](https://py-trees.readthedocs.io/en/devel/). This package gives us all of the ground-level features & functionality needed to use behaviour trees extensively in our research projects. The classes in this package are a base to help build behaviour trees for solving tasks, but in general should not be expanded or changed. See [the tutorial](https://github.com/qcr/ros_trees/wiki/Tutorial:-Binning-Bottles-with-ROS-Trees) for an example of solving a robotics task using trees.
 
 The main contribution of this package is a structured, consistent, and flexible definition for the internals of a leaf. By defining this here, we have a common base that "automagically" handles a large majority of the challenges in passing data & linking components in a behaviour tree.
 
@@ -16,7 +16,7 @@ The main contribution of this package is a structured, consistent, and flexible 
 
 The above figure shows the anatomy of leaf's lifecycle, from the time it is started by the behaviour tree to the time it finishes & the tree moves onto the next leaf. Details for each of the parts in the image above are provided below:
 
-- **pre**: other leaves have run before this leaf & stored data in the [py_trees blackboard](https://py-trees.readthedocs.io/en/devel/blackboards.html) (a centralised key-value dictionary). There is also the special method `get_last_value()` from `rv_trees.data_management` that will "magically" get the last saved result from a previous leaf. 
+- **pre**: other leaves have run before this leaf & stored data in the [py_trees blackboard](https://py-trees.readthedocs.io/en/devel/blackboards.html) (a centralised key-value dictionary). There is also the special method `get_last_value()` from `ros_trees.data_management` that will "magically" get the last saved result from a previous leaf. 
 - **load data**: the leaf will attempt to load any data it needs by calling `load_fn`. If the `load_fn` argument is not provided, there is a default behaviour that should work for most cases. The default `load_fn` (see `Leaf._default_load_fn()`) will load from the blackboard key `load_key` if provided, otherwise it uses the last saved value through `get_last_value()`.
 - **loaded**: the result of `load_fn` can be assumed to be available in the `self.loaded_data` member from this point forward.
 - **ticking**: advanced behaviour for a leaf that doesn't complete immediately. Override `is_leaf_done()` to control how the leaf decides its action is done, & override `_extra_update()` to start your long running behaviour. It **must not** be blocking!
@@ -27,11 +27,11 @@ The above figure shows the anatomy of leaf's lifecycle, from the time it is star
 - **evaluate the result**: `eval_fn` is called to determine whether the leaf's process was a success or failure. The function is provided with `save_value` if set, otherwise `self.result`. If no `eval_fn` is provided, the default will return the first bool if the data provided is a list, otherwise the Boolean evaluation of the data.
 - **post**: the tree has decided the leaf is done; any steps your leaf needs to perform to stop its action should be done in an overload of `_extra_terminate()`. For example, an `ActionLeaf` sends the pre-empt signal by overloading `extra_terminate()`.
 
-That's a general overview of the leaf lifecycle in `rv_trees`. We have covered what you will need to know about leaves for 99% of cases, but there are also other methods you can override to control other parts of the process. See the class implementation `rv_trees.leaves.Leaf` for full details.
+That's a general overview of the leaf lifecycle in `ros_trees`. We have covered what you will need to know about leaves for 99% of cases, but there are also other methods you can override to control other parts of the process. See the class implementation `ros_trees.leaves.Leaf` for full details.
 
 ## Using Leaves with ROS
 
-All the work for interfacing with ROS topics, Services, & Action Servers is already done for you in `rv_trees.leaves_ros.*`. It provides the following leaves (that extend the functionality of the base `Leaf` class described above):
+All the work for interfacing with ROS topics, Services, & Action Servers is already done for you in `ros_trees.leaves_ros.*`. It provides the following leaves (that extend the functionality of the base `Leaf` class described above):
 
 - `ActionLeaf`: calls a ROS Action Server with namespace `action_namespace`
 - `PublisherLeaf`: publishes a message on topic `topic_name` with type `topic_class`
@@ -40,13 +40,13 @@ All the work for interfacing with ROS topics, Services, & Action Servers is alre
 
 ROS can be a bit torturous when it comes to passing data between processes. For example, a service response `MyServiceResponse` with fields `PoseStamped` & an Action Server with goal `MyActionGoal` with exactly the same fields, they cannot be used interchangeably. A manual conversion for every possible type of input data is needed even though they have exactly the same fields. This becomes extremely tedious in the scope of a tree, especially given a leaf should be written so that it is as input agnostic as possible!
 
-`rv_trees` handles this pain "automagically" through the method `rv_trees.data_management.auto_generate()`. This function tries as hard as possible to generate an instance of the desired object class from input data (don't ask...). While being extremely convenient (it stops you from having to write all this annoying arbitrary linking code), it is also crucial to your leaves. Using this method means your leaves will work with as many different types of input as possible, rather than only working if preceded by some specific leaf that outputs some specific class providing the only supported input.
+`ros_trees` handles this pain "automagically" through the method `ros_trees.data_management.auto_generate()`. This function tries as hard as possible to generate an instance of the desired object class from input data (don't ask...). While being extremely convenient (it stops you from having to write all this annoying arbitrary linking code), it is also crucial to your leaves. Using this method means your leaves will work with as many different types of input as possible, rather than only working if preceded by some specific leaf that outputs some specific class providing the only supported input.
 
-Deviating from using the `rv_trees.data_management.auto_generate()` style of working with inputs is extremely inflexible, and will make a leaf that will probably only ever be usable by you; **that defeats the purpose of these abstracted leaves!**
+Deviating from using the `ros_trees.data_management.auto_generate()` style of working with inputs is extremely inflexible, and will make a leaf that will probably only ever be usable by you; **that defeats the purpose of these abstracted leaves!**
 
 ### Basic Examples
 
-Below are some basic examples of how to write your own leaves (note: any leaf can be written as an instance or class, with class being generally preferred). There are a tonne more examples in `rv_tasks.common_leaves.*`.
+Below are some basic examples of how to write your own leaves (note: any leaf can be written as an instance or class, with class being generally preferred). There are a tonne more examples in `ros_tasks.common_leaves.*`.
 
 A `Leaf` which does not accept any input data, and saves the result (output of `leaf.result_fn()`) so the next leaf can access it via `data_management.get_last_value()`:
 
@@ -103,12 +103,12 @@ first_object_leaf = ServiceLeaf(
 
 Following on from above, a good leaf is a leaf that is as general purpose as physically possible given what it does. It may be impossible to write a leaf that can perform object detection without an input image, but your leaf should be written to work with any type of input that contains an image. To achieve this, the following are some good guidelines to stick by:
 
-- Implement your leaves by extending an existing class (e.g. `classdef MyLeaf(rv_trees.leaves.Leaf): ...`)
+- Implement your leaves by extending an existing class (e.g. `classdef MyLeaf(ros_trees.leaves.Leaf): ...`)
 - The less code in your leaf implementation, generally the better. Don't be afraid of having a leaf class that is literally just setting a default parameter (that's what most `ActionLeaf` & `ServiceLeaf` implementations end up being).
 - Lean on default behaviours & function implementations as much as possible; they are there to make writing good leaves as easy as possible
 - Prefer extending methods over a complete override (i.e. if method `m()` is replacing `BaseClass.m()` in the base leaf class, your implementation of `m()` should call `BaseClass.m()` either directly or by `super(MyClass, self).m()` where possible).
 - Making changes to leaves here (in particularly `Leaf`) affects every leaf ever written by anyone... that should be weighed up when considering whether it is easier to just implement what you want in your own leaf.
-- To make sure people use your leaves (once you're sure it's usable), include it in the appropriate part of `rv_tasks.common_leaves.*`
+- To make sure people use your leaves (once you're sure it's usable), include it in the appropriate part of `ros_tasks.common_leaves.*`
 
 ## Leaf Parameterisation Documentation
 

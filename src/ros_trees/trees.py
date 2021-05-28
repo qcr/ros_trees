@@ -20,7 +20,7 @@ try:
 except NameError:
     pass
 
-_TMP_LOCATION = '/tmp/rv_trees'
+_TMP_LOCATION = '/tmp/ros_trees'
 
 
 def _validate_tmp():
