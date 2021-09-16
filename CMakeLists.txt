@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(rv_trees)
+project(ros_trees)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -13,7 +13,7 @@ catkin_python_setup()
 
 catkin_package(
   #  INCLUDE_DIRS include
-  #  LIBRARIES rv_trees
+  #  LIBRARIES ros_trees
   #  CATKIN_DEPENDS other_catkin_pkg
   #  DEPENDS system_lib
   )

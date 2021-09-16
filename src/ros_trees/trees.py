@@ -3,19 +3,24 @@ import os
 import py_trees as pt
 import py_trees_ros as ptr
 import select
-import subprocess32 as subprocess
+
+try:
+    import subprocess32 as subprocess
+except ImportError:
+    import subprocess
+
 import sys
 import time
 from timeit import default_timer as timer
 
-import leaves
+from . import leaves
 
 try:
     input = raw_input
 except NameError:
     pass
 
-_TMP_LOCATION = '/tmp/rv_trees'
+_TMP_LOCATION = '/tmp/ros_trees'
 
 
 def _validate_tmp():

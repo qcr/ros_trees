@@ -49,19 +49,21 @@ class Leaf(pt.behaviour.Behaviour):
 
     def _default_eval_fn(self, value):
         if isinstance(value, list):
+            if not len(value):
+                return False
             first_bool = next((i for i in value if isinstance(i, bool)), None)
             return bool(value[0]) if first_bool is None else first_bool
         else:
             return bool(value)
 
-    def _default_load_fn(self):
+    def _default_load_fn(self, auto_generate=True):
         if self.load_value is None:
             return (dm.get_last_value(self)
                     if self.load_key is None else dm.get_value(self.load_key))
         else:
             return self.load_value
 
-    def _default_result_fn(self):
+    def _default_result_fn(self, custom_data=None):
         return self.loaded_data
 
     def _default_save_fn(self, value):

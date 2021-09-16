@@ -1,3 +1,4 @@
 *.sw*
 *.pyc
 __pycache__/
+.vscode

@@ -95,6 +95,10 @@ def get_last_value(leaf=None):
         while leaf is not None and result is None:
             leaf_old = leaf
             leaf = _get_previous_leaf(leaf_old)
+
+            if leaf and leaf.status == pt.Status.INVALID:
+              continue
+
             result = get_value(_get_last_result_key(leaf))
         return result
 

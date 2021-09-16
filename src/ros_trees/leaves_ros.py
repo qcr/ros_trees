@@ -24,10 +24,13 @@ class ActionLeaf(Leaf):
         return (self._action_client.get_state() == GoalStatus.SUCCEEDED and
                 super(ActionLeaf, self)._default_eval_fn(value))
 
-    def _default_load_fn(self):
-        return dm.auto_generate(
-            super(ActionLeaf, self)._default_load_fn(),
-            type(self._action_class().action_goal.goal))
+    def _default_load_fn(self, auto_generate=True):
+        if auto_generate:
+          return dm.auto_generate(
+              super(ActionLeaf, self)._default_load_fn(),
+              type(self._action_class().action_goal.goal))
+        else:
+          return super(ActionLeaf, self)._default_load_fn()
 
     def _default_result_fn(self):
         return self._action_client.get_result()
@@ -37,12 +40,15 @@ class ActionLeaf(Leaf):
 
     def _extra_setup(self, timeout):
         # Get a client & type for the Action Server
-        self._action_class = roslib.message.get_message_class(
-            re.sub('Goal$', '',
-                   rostopic.get_topic_type(self.action_namespace +
-                                           '/goal')[0]))
-        self._action_client = actionlib.SimpleActionClient(
-            self.action_namespace, self._action_class)
+        try:
+          self._action_class = roslib.message.get_message_class(
+              re.sub('Goal$', '',
+                    rostopic.get_topic_type(self.action_namespace +
+                                            '/goal')[0]))
+          self._action_client = actionlib.SimpleActionClient(
+              self.action_namespace, self._action_class)
+        except:
+          raise Exception('Failed to set up action client for server: {}'.format(self.action_namespace))
 
         # Confirm the action client is actually there
         if not self._action_client.wait_for_server(rospy.Duration(timeout)):
@@ -80,13 +86,16 @@ class PublisherLeaf(Leaf):
         self.topic_class = topic_class
         self._publisher = None
 
-    def _default_load_fn(self):
-        return dm.auto_generate(
-            super(PublisherLeaf, self)._default_load_fn(), self.topic_class)
+    def _default_load_fn(self, auto_generate=True):
+        if auto_generate:
+          return dm.auto_generate(
+              super(PublisherLeaf, self)._default_load_fn(), self.topic_class)
+        else:
+          return super(PublisherLeaf, self)._default_load_fn()
 
-    def _default_result_fn(self):
+    def _default_result_fn(self, custom_data=None):
         try:
-            self._publisher.publish(self.loaded_data)
+            self._publisher.publish(custom_data if custom_data is not None else self.loaded_data)
             return True
         except Exception as e:
             self.logger.error("%s.result_fn(): %s" % (self.name, e))
@@ -119,14 +128,17 @@ class ServiceLeaf(Leaf):
         self._service_class = None
         self._service_proxy = None
 
-    def _default_load_fn(self):
-        return dm.auto_generate(
-            super(ServiceLeaf, self)._default_load_fn(),
-            self._service_class._request_class)
+    def _default_load_fn(self, auto_generate=True):
+        if auto_generate:
+          return dm.auto_generate(
+              super(ServiceLeaf, self)._default_load_fn(),
+              self._service_class._request_class)
+        else:
+          return super(ServiceLeaf, self)._default_load_fn()
 
-    def _default_result_fn(self):
+    def _default_result_fn(self, custom_data=None):
         try:
-            return self._service_proxy(self.loaded_data)
+            return self._service_proxy(custom_data if custom_data is not None else self.loaded_data)
         except Exception as e:
             self.logger.error("%s.result_fn(): %s" % (self.name, e))
             return None
