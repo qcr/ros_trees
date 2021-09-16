@@ -6,6 +6,11 @@
 
 # ROS Trees: Easy Behaviour Trees with ROS
 
+<p align="center">
+  <img src="https://github.com/qcr/ros_trees/wiki/assets/tree.jpg" />
+  <img src="https://github.com/qcr/ros_trees/wiki/assets/frankie.gif" width="955" />
+</p>
+
 ROS Trees contains custom implementations & extensions of the behaviour trees defined in [py_trees](https://py-trees.readthedocs.io/en/devel/). This package gives us all of the ground-level features & functionality needed to use behaviour trees extensively in our research projects. The classes in this package are a base to help build behaviour trees for solving tasks, but in general should not be expanded or changed. See [the tutorial](https://github.com/qcr/ros_trees/wiki/Tutorial:-Binning-Bottles-with-ROS-Trees) for an example of solving a robotics task using trees.
 
 The main contribution of this package is a structured, consistent, and flexible definition for the internals of a leaf. By defining this here, we have a common base that "automagically" handles a large majority of the challenges in passing data & linking components in a behaviour tree.
@@ -16,11 +21,11 @@ The main contribution of this package is a structured, consistent, and flexible 
 
 The above figure shows the anatomy of leaf's lifecycle, from the time it is started by the behaviour tree to the time it finishes & the tree moves onto the next leaf. Details for each of the parts in the image above are provided below:
 
-- **pre**: other leaves have run before this leaf & stored data in the [py_trees blackboard](https://py-trees.readthedocs.io/en/devel/blackboards.html) (a centralised key-value dictionary). There is also the special method `get_last_value()` from `ros_trees.data_management` that will "magically" get the last saved result from a previous leaf. 
+- **pre**: other leaves have run before this leaf & stored data in the [py_trees blackboard](https://py-trees.readthedocs.io/en/devel/blackboards.html) (a centralised key-value dictionary). There is also the special method `get_last_value()` from `ros_trees.data_management` that will "magically" get the last saved result from a previous leaf.
 - **load data**: the leaf will attempt to load any data it needs by calling `load_fn`. If the `load_fn` argument is not provided, there is a default behaviour that should work for most cases. The default `load_fn` (see `Leaf._default_load_fn()`) will load from the blackboard key `load_key` if provided, otherwise it uses the last saved value through `get_last_value()`.
 - **loaded**: the result of `load_fn` can be assumed to be available in the `self.loaded_data` member from this point forward.
 - **ticking**: advanced behaviour for a leaf that doesn't complete immediately. Override `is_leaf_done()` to control how the leaf decides its action is done, & override `_extra_update()` to start your long running behaviour. It **must not** be blocking!
-- **attain a result**: after the leaf is done it calls `result_fn` to get the result of the action performed (for short running actions you can simply perform it in `result_fn`). 
+- **attain a result**: after the leaf is done it calls `result_fn` to get the result of the action performed (for short running actions you can simply perform it in `result_fn`).
 - **finished**: the leaf has performed its action, it can be assumed that the result is available in `self.result`.
 - **saving the result**: if the `save` flag is set, the leaf will attempt to save `self.result` (or `save_value`) according to `save_fn`. The default `save_fn` should be fine for most cases; it saves the result to key `save_key` if it is set, otherwise the result is saved such that it is available to the next leaf in the tree with `get_last_value()`.
 - **leaving**: the leaf is done; no more actions should be performed by the leaf from this point on.
@@ -124,7 +129,7 @@ A barebones `Leaf` that every leaf we write should build upon. Going around this
 - **`load_key`**: a key to load data from the `py_trees.Blackboard` (default = `None`). If this exists, & `load_value` is not set, `load_fn` should return what is stored at this key.
 - **`load_fn`**: a function handle of the form `fn(leaf)`, returning the loaded data (default = `None`). It is used instead of `Leaf._default_load_fn` if provided. The default method loads the first available from: `load_value`, `load_key`, `data_management.get_last_value()`. Your implementation ideally should still call `Leaf._default_load_fn`, & respect the priority order outlined.
 - **`result_fn`**: a function handle of the form `fn(leaf)`, returning the result of the Leaf's action (default = `None`). It is used instead of `Leaf._default_result_fn` if provided. The default simply returns `leaf.loaded_data`.
-- **`save`**: whether the leaf should save the result (default = `False`). 
+- **`save`**: whether the leaf should save the result (default = `False`).
 - **`save_value`**: static data to be saved **instead** of the leaf result (default = `None`). If this is set `save_fn` is called with a `value` of `save_value` instead of `leaf.result`.
 - **`save_key`**: a key to load data from the `py_trees.Blackboard` (default = `None`). If this is present it takes precedence over saving to last result via `data_management.set_last_value()`, so `save_fn` should save to this key.
 - **`save_fn`**: a function handle of the form `fn(leaf, value)`, which saves `value` to the configured location. It is used instead of `Leaf._default_save_fn` if provided. The default method saves `value` at key `save_key` if `save_key` is set, otherwise it stores the value with `data_management.set_last_value()`. Your implementation should respect this priority order.
@@ -185,4 +190,3 @@ The `SubscriberLeaf` class defines four extra parameters:
 - **`topic_class`**: the type of message that leaf will expect to receive (required)
 - **`expiry_time`**: the time after which a message is deemed to have expired & is deemed to old to be returned by the leaf (default = `None`). No value means all messages will be considered.
 - **`timeout`**: the max time the leaf will wait before declaring nothing was received (default=`3.0`)
-
