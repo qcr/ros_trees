@@ -4,54 +4,44 @@
 </strong>
 </p>
 
-# ROS Trees: Easy Behaviour Trees with ROS
+# ROS Trees: Behaviour Trees for robotic systems
 
 <p align="center">
-  <img src="https://github.com/qcr/ros_trees/wiki/assets/tree.jpg" />
   <img src="https://github.com/qcr/ros_trees/wiki/assets/frankie.gif" width="955" />
 </p>
 
-ROS Trees contains custom implementations & extensions of the behaviour trees defined in [py_trees](https://py-trees.readthedocs.io/en/devel/). This package gives us all of the ground-level features & functionality needed to use behaviour trees extensively in our research projects. The classes in this package are a base to help build behaviour trees for solving tasks, but in general should not be expanded or changed. See [the tutorial](https://github.com/qcr/ros_trees/wiki/Tutorial:-Binning-Bottles-with-ROS-Trees) for an example of solving a robotics task using trees.
+ROS Trees makes behaviour trees accessible in ROS ecosystems, bringing all the compositional benefits of behaviour trees while facilitating interactions with the underlying state of robotic systems. We build on top of the capabilities provided by [py_trees](https://py-trees.readthedocs.io/en/devel/), with these extra features:
 
-The main contribution of this package is a structured, consistent, and flexible definition for the internals of a leaf. By defining this here, we have a common base that "automagically" handles a large majority of the challenges in passing data & linking components in a behaviour tree.
+- ROS-specific leaves for all common interfaces (i.e. action servers, services, publishers, subscribers)
+- Automatic, and configurable, data passing between consecutive leaves (e.g. pass an object detector leaf's output to a motion controller leaf with zero code)
+- Heavily configurable leaf definitions, with most custom leaves only requiring a few lines of code
+- Fine-grained leaf lifecycle, with simple interfaces for customisation (see [leaf anatomy](#the-anatomy-of-a-leaf))
+- Automatic translation when passing similar data between leaves (e.g. convert a suggested grasp pose into a navigation goal with zero code)
 
-## The Anatomy of a Leaf
+This package has been used on a number of real world robots, allowing us to combine a range of useful robot capabilities into significant robot behaviours. Featured works include:
 
-![Anatomy of a Leaf](./docs/leaf_anatomy.png "Anatomy of a Leaf")
+- [Holistic Mobile Manipulation](https://jhavl.github.io/holistic/) (shown above)
+- [Learning and executing re-usable behaviour trees from natural language instruction](https://arxiv.org/abs/2106.01650)
+- Australian Centre for Robotic Vision (ACRV) entry in the [2019 RoboCup@Home competition](https://2019.robocup.org/at-home-league.php)
 
-The above figure shows the anatomy of leaf's lifecycle, from the time it is started by the behaviour tree to the time it finishes & the tree moves onto the next leaf. Details for each of the parts in the image above are provided below:
-
-- **pre**: other leaves have run before this leaf & stored data in the [py_trees blackboard](https://py-trees.readthedocs.io/en/devel/blackboards.html) (a centralised key-value dictionary). There is also the special method `get_last_value()` from `ros_trees.data_management` that will "magically" get the last saved result from a previous leaf.
-- **load data**: the leaf will attempt to load any data it needs by calling `load_fn`. If the `load_fn` argument is not provided, there is a default behaviour that should work for most cases. The default `load_fn` (see `Leaf._default_load_fn()`) will load from the blackboard key `load_key` if provided, otherwise it uses the last saved value through `get_last_value()`.
-- **loaded**: the result of `load_fn` can be assumed to be available in the `self.loaded_data` member from this point forward.
-- **ticking**: advanced behaviour for a leaf that doesn't complete immediately. Override `is_leaf_done()` to control how the leaf decides its action is done, & override `_extra_update()` to start your long running behaviour. It **must not** be blocking!
-- **attain a result**: after the leaf is done it calls `result_fn` to get the result of the action performed (for short running actions you can simply perform it in `result_fn`).
-- **finished**: the leaf has performed its action, it can be assumed that the result is available in `self.result`.
-- **saving the result**: if the `save` flag is set, the leaf will attempt to save `self.result` (or `save_value`) according to `save_fn`. The default `save_fn` should be fine for most cases; it saves the result to key `save_key` if it is set, otherwise the result is saved such that it is available to the next leaf in the tree with `get_last_value()`.
-- **leaving**: the leaf is done; no more actions should be performed by the leaf from this point on.
-- **evaluate the result**: `eval_fn` is called to determine whether the leaf's process was a success or failure. The function is provided with `save_value` if set, otherwise `self.result`. If no `eval_fn` is provided, the default will return the first bool if the data provided is a list, otherwise the Boolean evaluation of the data.
-- **post**: the tree has decided the leaf is done; any steps your leaf needs to perform to stop its action should be done in an overload of `_extra_terminate()`. For example, an `ActionLeaf` sends the pre-empt signal by overloading `extra_terminate()`.
-
-That's a general overview of the leaf lifecycle in `ros_trees`. We have covered what you will need to know about leaves for 99% of cases, but there are also other methods you can override to control other parts of the process. See the class implementation `ros_trees.leaves.Leaf` for full details.
+We are always interested in hearing about where our software is used. If you've used ROS Trees in your work, we'd love to hear more about how it was used.
 
 ## Using Leaves with ROS
 
-All the work for interfacing with ROS topics, Services, & Action Servers is already done for you in `ros_trees.leaves_ros.*`. It provides the following leaves (that extend the functionality of the base `Leaf` class described above):
+All the work for interfacing with ROS topics, Services, & Action Servers is already done for you in `ros_trees.leaves_ros.*`. It provides the following leaves, which extend the functionality of the base `Leaf` class described [below](#the-anatomy-of-a-leaf):
 
 - `ActionLeaf`: calls a ROS Action Server with namespace `action_namespace`
 - `PublisherLeaf`: publishes a message on topic `topic_name` with type `topic_class`
 - `ServiceLeaf`: calls a ROS Service with service name `service_name`
 - `SubscriberLeaf`: receives a message on topic `topic_name` with type `topic_class`
 
-ROS can be a bit torturous when it comes to passing data between processes. For example, a service response `MyServiceResponse` with fields `PoseStamped` & an Action Server with goal `MyActionGoal` with exactly the same fields, they cannot be used interchangeably. A manual conversion for every possible type of input data is needed even though they have exactly the same fields. This becomes extremely tedious in the scope of a tree, especially given a leaf should be written so that it is as input agnostic as possible!
+ROS can be tedious when it comes to passing data between processes. For example, a service response with a `PoseStamped` field (e.g. `MyServiceResponse`) and an Action Server with a `PoseStamped` goal field (e.g. `MyActionGoal`) _cannot_ be used interchangeably. A manual conversion of output to input is needed even though they have exactly the same fields. This becomes extremely tiresome in the scope of a tree, where there are linking outputs to inputs is widespread. It makes it impossible to chain standalone leaves together, as they are inherently dependent on each other's input and output formats.
 
-`ros_trees` handles this pain "automagically" through the method `ros_trees.data_management.auto_generate()`. This function tries as hard as possible to generate an instance of the desired object class from input data (don't ask...). While being extremely convenient (it stops you from having to write all this annoying arbitrary linking code), it is also crucial to your leaves. Using this method means your leaves will work with as many different types of input as possible, rather than only working if preceded by some specific leaf that outputs some specific class providing the only supported input.
-
-Deviating from using the `ros_trees.data_management.auto_generate()` style of working with inputs is extremely inflexible, and will make a leaf that will probably only ever be usable by you; **that defeats the purpose of these abstracted leaves!**
+`ros_trees` handles this pain "automagically" through the method `ros_trees.data_management.auto_generate()`. This function tries as hard as possible to generate an instance of the desired object class from data (don't ask...). While this saves you from writing endless arbitrary linking code, it is also improves the quality of your leaves. Using this method makes leaves work with as many different types of input as possible, rather than requiring manual conversion code with every use case.
 
 ### Basic Examples
 
-Below are some basic examples of how to write your own leaves (note: any leaf can be written as an instance or class, with class being generally preferred). There are a tonne more examples in `ros_tasks.common_leaves.*`.
+Below are some basic examples of how to write your own leaves (note: any leaf can be written as an instance or class, with class being generally preferred):
 
 A `Leaf` which does not accept any input data, and saves the result (output of `leaf.result_fn()`) so the next leaf can access it via `data_management.get_last_value()`:
 
@@ -115,6 +105,25 @@ Following on from above, a good leaf is a leaf that is as general purpose as phy
 - Making changes to leaves here (in particularly `Leaf`) affects every leaf ever written by anyone... that should be weighed up when considering whether it is easier to just implement what you want in your own leaf.
 - To make sure people use your leaves (once you're sure it's usable), include it in the appropriate part of `ros_tasks.common_leaves.*`
 
+## The Anatomy of a Leaf
+
+![Anatomy of a Leaf](./docs/leaf_anatomy.png "Anatomy of a Leaf")
+
+The above figure shows the anatomy of leaf's lifecycle, from the time it is started by the behaviour tree to the time it finishes & the tree moves onto the next leaf. Details for each of the parts in the image above are provided below:
+
+- **pre**: other leaves have run before this leaf & stored data in the [py_trees blackboard](https://py-trees.readthedocs.io/en/devel/blackboards.html) (a centralised key-value dictionary). There is also the special method `get_last_value()` from `ros_trees.data_management` that will "magically" get the last saved result from a previous leaf.
+- **load data**: the leaf will attempt to load any data it needs by calling `load_fn`. If the `load_fn` argument is not provided, there is a default behaviour that should work for most cases. The default `load_fn` (see `Leaf._default_load_fn()`) will load from the blackboard key `load_key` if provided, otherwise it uses the last saved value through `get_last_value()`.
+- **loaded**: the result of `load_fn` can be assumed to be available in the `self.loaded_data` member from this point forward.
+- **ticking**: advanced behaviour for a leaf that doesn't complete immediately. Override `is_leaf_done()` to control how the leaf decides its action is done, & override `_extra_update()` to start your long running behaviour. It **must not** be blocking!
+- **attain a result**: after the leaf is done it calls `result_fn` to get the result of the action performed (for short running actions you can simply perform it in `result_fn`).
+- **finished**: the leaf has performed its action, it can be assumed that the result is available in `self.result`.
+- **saving the result**: if the `save` flag is set, the leaf will attempt to save `self.result` (or `save_value`) according to `save_fn`. The default `save_fn` should be fine for most cases; it saves the result to key `save_key` if it is set, otherwise the result is saved such that it is available to the next leaf in the tree with `get_last_value()`.
+- **leaving**: the leaf is done; no more actions should be performed by the leaf from this point on.
+- **evaluate the result**: `eval_fn` is called to determine whether the leaf's process was a success or failure. The function is provided with `save_value` if set, otherwise `self.result`. If no `eval_fn` is provided, the default will return the first bool if the data provided is a list, otherwise the Boolean evaluation of the data.
+- **post**: the tree has decided the leaf is done; any steps your leaf needs to perform to stop its action should be done in an overload of `_extra_terminate()`. For example, an `ActionLeaf` sends the pre-empt signal by overloading `extra_terminate()`.
+
+That's a general overview of the leaf lifecycle in `ros_trees`. We have covered what you will need to know about leaves for 99% of cases, but there are also other methods you can override to control other parts of the process. See the class implementation `ros_trees.leaves.Leaf` for full details.
+
 ## Leaf Parameterisation Documentation
 
 Here we describe each of the input arguments to the leaf classes. Note that all classes have the `Leaf` class arguments as they extend from it. If you need any more details, feel free to dig into the class implementations.
@@ -177,7 +186,7 @@ The `ServiceLeaf` class defines one extra parameter:
 
 - **`service_name`**: the name of the ROS Service the leaf will interact with (required)
 
-## SubscriberLeaf class
+### SubscriberLeaf class
 
 A `SubscriberLeaf` attempts to get a message on a topic, with configurable timeout parameters. It makes the following extensions to the base `Leaf` class:
 
