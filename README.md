@@ -43,7 +43,7 @@ ROS can be tedious when it comes to passing data between processes. For example,
 
 Leaves can be written as an instance or class, with class being generally preferred. Below are some basic examples of how to write your own leaves ():
 
-- A `Leaf` which does not accept any input data, and saves the result (output of `leaf.result_fn()`) so the next leaf can access it via `data_management.get_last_value()`:
+- A `Leaf` which accepts no input data, and saves the result (output of `leaf.result_fn()`) so the next leaf can access it via `data_management.get_last_value()`:
 
   ```python
   data_generator_leaf = Leaf("Data Generator", load=False, save=True)
@@ -86,12 +86,16 @@ Leaves can be written as an instance or class, with class being generally prefer
                                   service_name='/detect_objects',
                                   load_key='rgb_image',
                                   result_fn=first_object)
-  # or
+  ```
+
+- The previous example, but using a [Lambda](https://docs.python.org/3/tutorial/controlflow.html#lambda-expressions) instead:
+
+  ```python
   first_object_leaf = ServiceLeaf(
-      "Get first object",
-      service_name='/detect_objects',
-      load_key='rgb_image',
-      result_fn=lambda leaf: leaf._default_result_fn[0])
+    "Get first object",
+    service_name='/detect_objects',
+    load_key='rgb_image',
+    result_fn=lambda leaf: leaf._default_result_fn[0])
   ```
 
 ### Writing Good Leaves
