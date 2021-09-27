@@ -41,58 +41,58 @@ ROS can be tedious when it comes to passing data between processes. For example,
 
 ### Basic Examples
 
-Below are some basic examples of how to write your own leaves (note: any leaf can be written as an instance or class, with class being generally preferred):
+Leaves can be written as an instance or class, with class being generally preferred. Below are some basic examples of how to write your own leaves ():
 
-A `Leaf` which does not accept any input data, and saves the result (output of `leaf.result_fn()`) so the next leaf can access it via `data_management.get_last_value()`:
+- A `Leaf` which does not accept any input data, and saves the result (output of `leaf.result_fn()`) so the next leaf can access it via `data_management.get_last_value()`:
 
-```python
-data_generator_leaf = Leaf("Data Generator", load=False, save=True)
-```
+  ```python
+  data_generator_leaf = Leaf("Data Generator", load=False, save=True)
+  ```
 
-A `Leaf` which swaps success results for failures & vice versa (note: usually you would use [py_trees.decorators](https://py-trees.readthedocs.io/en/devel/decorators.html) for this):
+- A `Leaf` which swaps success results for failures & vice versa (note: usually you would use [py_trees.decorators](https://py-trees.readthedocs.io/en/devel/decorators.html) for this):
 
-```python
-inverted_leaf = Leaf(
-    "Inverted", eval_fn=lambda leaf, value: not leaf._default_eval_fn(value))
-```
+  ```python
+  inverted_leaf = Leaf(
+      "Inverted", eval_fn=lambda leaf, value: not leaf._default_eval_fn(value))
+  ```
 
-A `SubscriberLeaf` whose data on `'/camera/image_raw'` is not yet ready for use (we don't yet have the camera), so instead it will instantly return failure via debug mode:
+- A `SubscriberLeaf` whose data on `'/camera/image_raw'` is not yet ready for use (we don't yet have the camera), so instead it will instantly return failure via debug mode:
 
-```python
-camera_leaf = SubscriberLeaf("Camera",
-                             topic_name='/camera/image_raw',
-                             topic_class=sensor_msgs.Image,
-                             debug=debugging.DebugMode.INSTANT_FAILURE)
-```
+  ```python
+  camera_leaf = SubscriberLeaf("Camera",
+                               topic_name='/camera/image_raw',
+                               topic_class=sensor_msgs.Image,
+                               debug=debugging.DebugMode.INSTANT_FAILURE)
+  ```
 
-An `ActionLeaf` calling a `'/move_to_location'` ROS Action Server to move an arm `'home'`, & saves `True` as the result indicating it always succeeds:
+- An `ActionLeaf` calling a `'/move_to_location'` ROS Action Server to move an arm `'home'`, & saves `True` as the result indicating it always succeeds:
 
-```python
-move_home_leaf = ActionLeaf("Move home",
-                            action_namespace='/move_to_location',
-                            load_value='home',
-                            save=True,
-                            save_value=True)
-```
+  ```python
+  move_home_leaf = ActionLeaf("Move home",
+                              action_namespace='/move_to_location',
+                              load_value='home',
+                              save=True,
+                              save_value=True)
+  ```
 
-A `ServiceLeaf` calling a `'/detect_objects'` ROS Service by taking in an RGB image saved in key `'rgb_image'`, & returning the first object in the list of returned objects:
+- A `ServiceLeaf` calling a `'/detect_objects'` ROS Service by taking in an RGB image saved in key `'rgb_image'`, & returning the first object in the list of returned objects:
 
-```python
-def first_object(leaf):
-    return leaf._default_result_fn[0]
+  ```python
+  def first_object(leaf):
+      return leaf._default_result_fn[0]
 
 
-first_object_leaf = ServiceLeaf("Get first object",
-                                service_name='/detect_objects',
-                                load_key='rgb_image',
-                                result_fn=first_object)
-# or
-first_object_leaf = ServiceLeaf(
-    "Get first object",
-    service_name='/detect_objects',
-    load_key='rgb_image',
-    result_fn=lambda leaf: leaf._default_result_fn[0])
-```
+  first_object_leaf = ServiceLeaf("Get first object",
+                                  service_name='/detect_objects',
+                                  load_key='rgb_image',
+                                  result_fn=first_object)
+  # or
+  first_object_leaf = ServiceLeaf(
+      "Get first object",
+      service_name='/detect_objects',
+      load_key='rgb_image',
+      result_fn=lambda leaf: leaf._default_result_fn[0])
+  ```
 
 ### Writing Good Leaves
 
