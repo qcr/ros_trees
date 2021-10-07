@@ -1,14 +1,15 @@
 <?xml version="1.0"?>
 <package format="2">
   <name>ros_trees</name>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <description>The ros_trees package</description>
 
-  <maintainer email="b.talbot@qut.edu.au">Ben</maintainer>
+  <author>Ben Talbot</author>
+  <maintainer email="b.talbot@qut.edu.au">Ben Talbot</maintainer>
   <maintainer email="g.suddrey@qut.edu.au">Gavin Suddrey</maintainer>
   <license>BSD</license>
 
-  <url type="website">http://robotics.qut.edu.au</url>
+  <url type="website">https://github.com/qcr/ros_trees</url>
 
   <buildtool_depend>catkin</buildtool_depend>
   <exec_depend>rospy</exec_depend>
