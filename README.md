@@ -1,6 +1,6 @@
 <p align="center">
 <strong>
-~ Just starting? We have tutorials for <a href="https://github.com/qcr/ros_trees/wiki/Tutorial:-Binning-Bottles-with-ROS-Trees">getting started</a>, and <a href="https://github.com/qcr/ros_trees/wiki/Tutorial:-Binning-Bottles-with-ROS-Trees">solving problems with trees</a> ~
+~ New to ROS Trees? We have guides for <a href="https://github.com/qcr/ros_trees/wiki/Getting-Started">getting started</a>, and <a href="https://github.com/qcr/ros_trees/wiki/Solving-Problems-With-Trees">solving problems using trees</a> ~
 </strong>
 </p>
 
