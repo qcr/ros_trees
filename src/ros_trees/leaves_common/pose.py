@@ -7,6 +7,9 @@ from geometry_msgs.msg import Quaternion, PoseStamped
 
 from ..leaves import Leaf
 
+# TODO all of these should be updated to use `spatialmath` instead of the
+# tedious TF methods
+
 
 class TranslatePose(Leaf):
 
