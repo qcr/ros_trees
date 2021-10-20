@@ -1,6 +1,6 @@
 <p align="center">
 <strong>
-~ Just getting started with ROS Trees? Our <a href="https://github.com/qcr/ros_trees/wiki/Tutorial:-Binning-Bottles-with-ROS-Trees">tutorial</a> is a great place to start ~
+~ New to ROS Trees? We have guides for <a href="https://github.com/qcr/ros_trees/wiki/Getting-Started">getting started</a>, and <a href="https://github.com/qcr/ros_trees/wiki/Solving-Problems-With-Trees">solving problems using trees</a> ~
 </strong>
 </p>
 
@@ -97,6 +97,15 @@ Leaves can be written as an instance or class, with class being generally prefer
     load_key='rgb_image',
     result_fn=lambda leaf: leaf._default_result_fn[0])
   ```
+
+### Accessing Common Leaves
+
+General, non-robot-specific leaves that we create are provided through the `ros_trees.leaves_common` submodule. Importing this provides you with a library of common leaves including:
+
+- General [leaves provided by `py_trees`](https://py-trees.readthedocs.io/en/devel/modules.html#module-py_trees.behaviours) (note: leaves are called "behaviours" in their vocabulary)
+- Leaves for using the terminal to receive and send text
+- Leaves for transforming and translating poses
+- Leaves for using Queue data structures in behaviour trees
 
 ### Writing Good Leaves
 
