@@ -98,6 +98,15 @@ Leaves can be written as an instance or class, with class being generally prefer
     result_fn=lambda leaf: leaf._default_result_fn[0])
   ```
 
+### Accessing Common Leaves
+
+General, non-robot-specific leaves that we create are provided through the `ros_trees.leaves_common` submodule. Importing this provides you with a library of common leaves including:
+
+- General [leaves provided by `py_trees`](https://py-trees.readthedocs.io/en/devel/modules.html#module-py_trees.behaviours) (note: leaves are called "behaviours" in their vocabulary)
+- Leaves for using the terminal to receive and send text
+- Leaves for transforming and translating poses
+- Leaves for using Queue data structures in behaviour trees
+
 ### Writing Good Leaves
 
 A good leaf is a leaf that is as general purpose as physically possible given what it does. It may be impossible to write a leaf that can perform object detection without an input image, but your leaf should be written to work with any type of input that contains an image. To achieve this, the following are some good guidelines to stick by:
