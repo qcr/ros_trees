@@ -1,16 +1,11 @@
-from __future__ import print_function
 import sys
 import select
 
-from ros_trees.leaves import Leaf
-
-try:
-    input = raw_input
-except NameError:
-    pass
+from ..leaves import Leaf
 
 
 class Print(Leaf):
+
     def __init__(self, name=None, format_string=None, *args, **kwargs):
         super(Print, self).__init__(name if name else 'Print',
                                     result_fn=self._result_fn,
@@ -25,13 +20,22 @@ class Print(Leaf):
             print(self.loaded_data)
         return self.loaded_data
 
+
 class Read(Leaf):
-    def __init__(self, name='Read', prompt='> ', timeout=None, strip=False, save=True, *args, **kwargs):
+
+    def __init__(self,
+                 name='Read',
+                 prompt='> ',
+                 timeout=None,
+                 strip=False,
+                 save=True,
+                 *args,
+                 **kwargs):
         super(Read, self).__init__(name,
-                                    result_fn=self._result_fn,
-                                    save=save,
-                                    *args,
-                                    **kwargs)
+                                   result_fn=self._result_fn,
+                                   save=save,
+                                   *args,
+                                   **kwargs)
         self.timeout = timeout
         self.prompt = prompt
         self.strip = strip
@@ -41,11 +45,12 @@ class Read(Leaf):
         sys.stdout.flush()
 
         if len(select.select([sys.stdin], [], [], self.timeout)[0]) > 0:
-          text = sys.stdin.readline()
-          return text.strip() if self.strip else text
-        
+            text = sys.stdin.readline()
+            return text.strip() if self.strip else text
+
         print()
         return False
+
 
 class SelectItem(Leaf):
     # NOTE: this is BLOCKING & should ONLY BE USED for debugging purposes
