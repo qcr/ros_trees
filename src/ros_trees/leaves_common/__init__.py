@@ -1,9 +1,8 @@
-from . import audio
-from . import console
-from . import noop
-from . import pose
-from . import queue
-from . import task
-from . import ui
+# TODO: make this import a list rather than wildcard
+from py_trees.behaviours import *
 
-__all__ = ['console', 'noop', 'pose', 'queue', 'task', 'ui']
+from .console import *
+from .pose import *
+from .queue import *
+
+__all__ = ['console', 'pose', 'queue']
