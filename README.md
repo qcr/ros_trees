@@ -209,5 +209,6 @@ The `SubscriberLeaf` class defines four extra parameters:
 
 - **`topic_name`**: the name of the topic that the leaf will subscribe to (required)
 - **`topic_class`**: the type of message that leaf will expect to receive (required)
+- **`once_only`**: only new messages are returned from this leaf (no message will be returned twice)
 - **`expiry_time`**: the time after which a message is deemed to have expired and is deemed to old to be returned by the leaf (default = `None`). No value means all messages will be considered.
 - **`timeout`**: the max time the leaf will wait before declaring nothing was received (default=`3.0`)
