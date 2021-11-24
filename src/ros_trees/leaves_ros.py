@@ -176,6 +176,7 @@ class SubscriberLeaf(Leaf):
                  name,
                  topic_name,
                  topic_class,
+                 once_only=False,
                  expiry_time=None,
                  timeout=3.0,
                  save=True,
@@ -184,23 +185,34 @@ class SubscriberLeaf(Leaf):
         super(SubscriberLeaf, self).__init__(name, save=save, *args, **kwargs)
         self.topic_name = topic_name
         self.topic_class = topic_class
+        self.once_only = once_only
         self.expiry_time = expiry_time
         self.timeout = timeout
         self._subscriber = None
         self._cached_data = None
         self._cached_time = None
+        self._last_msg = None
 
     def _default_result_fn(self):
         t = rospy.get_time()
+
+        # While we don't have a valid message, keep waiting
         while ((self._cached_time is None or
                 (self.expiry_time is not None and
                  rospy.get_time() - self._cached_time > self.expiry_time)) and
                rospy.get_time() - t < self.timeout):
             rospy.sleep(0.1)
-        return (None if self._cached_time is None or
-                (self.expiry_time and
-                 rospy.get_time() - self._cached_time > self.expiry_time) else
-                self._cached_data)
+
+        # Return what we found, dumping the cache if we're returning something
+        # in once_only mode
+        out = (None if self._cached_time is None or
+               (self.expiry_time and
+                rospy.get_time() - self._cached_time > self.expiry_time) else
+               self._cached_data)
+        if self.once_only and out:
+            self._cached_data = None
+            self._cached_time = None
+        return out
 
     def _extra_setup(self, timeout):
         self._subscriber = rospy.Subscriber(self.topic_name, self.topic_class,
