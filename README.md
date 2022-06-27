@@ -6,6 +6,10 @@
 
 # ROS Trees: Behaviour Trees for robotic systems
 
+[![QUT Centre for Robotics Open Source](https://github.com/qcr/qcr.github.io/raw/master/misc/badge.svg)](https://qcr.github.io)
+![Primary language](https://img.shields.io/github/languages/top/qcr/ros_trees)
+[![License](https://img.shields.io/github/license/qcr/ros_trees)](./LICENSE.txt)
+
 <p align="center">
   <img src="https://github.com/qcr/ros_trees/wiki/assets/frankie.gif" width="955" />
 </p>
