@@ -15,7 +15,9 @@ class ActionLeaf(Leaf):
 
     def __init__(self, name, action_namespace, *args, **kwargs):
         super(ActionLeaf, self).__init__(name, *args, **kwargs)
-        self.action_namespace = action_namespace if action_namespace.startswith('/') else '/{}'.format(action_namespace)
+        self.action_namespace = (action_namespace
+                                 if action_namespace.startswith('/') else
+                                 '/{}'.format(action_namespace))
         self._action_class = None
         self._action_client = None
         self.sent_goal = False
@@ -26,11 +28,11 @@ class ActionLeaf(Leaf):
 
     def _default_load_fn(self, auto_generate=True):
         if auto_generate:
-          return dm.auto_generate(
-              super(ActionLeaf, self)._default_load_fn(),
-              type(self._action_class().action_goal.goal))
+            return dm.auto_generate(
+                super(ActionLeaf, self)._default_load_fn(),
+                type(self._action_class().action_goal.goal))
         else:
-          return super(ActionLeaf, self)._default_load_fn()
+            return super(ActionLeaf, self)._default_load_fn()
 
     def _default_result_fn(self):
         return self._action_client.get_result()
@@ -41,14 +43,17 @@ class ActionLeaf(Leaf):
     def _extra_setup(self, timeout):
         # Get a client & type for the Action Server
         try:
-          self._action_class = roslib.message.get_message_class(
-              re.sub('Goal$', '',
+            self._action_class = roslib.message.get_message_class(
+                re.sub(
+                    'Goal$', '',
                     rostopic.get_topic_type(self.action_namespace +
                                             '/goal')[0]))
-          self._action_client = actionlib.SimpleActionClient(
-              self.action_namespace, self._action_class)
+            self._action_client = actionlib.SimpleActionClient(
+                self.action_namespace, self._action_class)
         except:
-          raise Exception('Failed to set up action client for server: {}'.format(self.action_namespace))
+            raise Exception(
+                'Failed to set up action client for server: {}'.format(
+                    self.action_namespace))
 
         # Confirm the action client is actually there
         if not self._action_client.wait_for_server(rospy.Duration(timeout)):
@@ -88,14 +93,16 @@ class PublisherLeaf(Leaf):
 
     def _default_load_fn(self, auto_generate=True):
         if auto_generate:
-          return dm.auto_generate(
-              super(PublisherLeaf, self)._default_load_fn(), self.topic_class)
+            return dm.auto_generate(
+                super(PublisherLeaf, self)._default_load_fn(),
+                self.topic_class)
         else:
-          return super(PublisherLeaf, self)._default_load_fn()
+            return super(PublisherLeaf, self)._default_load_fn()
 
     def _default_result_fn(self, custom_data=None):
         try:
-            self._publisher.publish(custom_data if custom_data is not None else self.loaded_data)
+            self._publisher.publish(
+                custom_data if custom_data is not None else self.loaded_data)
             return True
         except Exception as e:
             self.logger.error("%s.result_fn(): %s" % (self.name, e))
@@ -108,15 +115,15 @@ class PublisherLeaf(Leaf):
         # one ROS...)
         t = rospy.get_time()
         sub = rospy.Subscriber(self.topic_name, self.topic_class)
-        
+
         self._publisher = rospy.Publisher(self.topic_name,
                                           self.topic_class,
                                           queue_size=10)
-        
+
         while (self._publisher.get_num_connections() == 0 and
-            (timeout == 0 or rospy.get_time() - t < timeout)):
+               (timeout == 0 or rospy.get_time() - t < timeout)):
             rospy.sleep(0.05)
-        
+
         return self._publisher.get_num_connections() > 0
 
 
@@ -130,15 +137,16 @@ class ServiceLeaf(Leaf):
 
     def _default_load_fn(self, auto_generate=True):
         if auto_generate:
-          return dm.auto_generate(
-              super(ServiceLeaf, self)._default_load_fn(),
-              self._service_class._request_class)
+            return dm.auto_generate(
+                super(ServiceLeaf, self)._default_load_fn(),
+                self._service_class._request_class)
         else:
-          return super(ServiceLeaf, self)._default_load_fn()
+            return super(ServiceLeaf, self)._default_load_fn()
 
     def _default_result_fn(self, custom_data=None):
         try:
-            return self._service_proxy(custom_data if custom_data is not None else self.loaded_data)
+            return self._service_proxy(
+                custom_data if custom_data is not None else self.loaded_data)
         except Exception as e:
             self.logger.error("%s.result_fn(): %s" % (self.name, e))
             return None
@@ -146,7 +154,8 @@ class ServiceLeaf(Leaf):
     def _extra_setup(self, timeout):
         # Confirm the service is actually there
         try:
-            rospy.wait_for_service(self.service_name, timeout if timeout else None)
+            rospy.wait_for_service(self.service_name,
+                                   timeout if timeout else None)
         except rospy.ROSException:
             self.logger.error(
                 "%s.setup() could not find a Service with name \"%s\"" %
@@ -167,6 +176,7 @@ class SubscriberLeaf(Leaf):
                  name,
                  topic_name,
                  topic_class,
+                 once_only=False,
                  expiry_time=None,
                  timeout=3.0,
                  save=True,
@@ -175,22 +185,34 @@ class SubscriberLeaf(Leaf):
         super(SubscriberLeaf, self).__init__(name, save=save, *args, **kwargs)
         self.topic_name = topic_name
         self.topic_class = topic_class
+        self.once_only = once_only
         self.expiry_time = expiry_time
         self.timeout = timeout
         self._subscriber = None
         self._cached_data = None
         self._cached_time = None
+        self._last_msg = None
 
     def _default_result_fn(self):
         t = rospy.get_time()
+
+        # While we don't have a valid message, keep waiting
         while ((self._cached_time is None or
                 (self.expiry_time is not None and
                  rospy.get_time() - self._cached_time > self.expiry_time)) and
                rospy.get_time() - t < self.timeout):
             rospy.sleep(0.1)
-        return (None if self._cached_time is None or
-                (self.expiry_time and rospy.get_time() - self._cached_time > self.expiry_time) else
-                self._cached_data)
+
+        # Return what we found, dumping the cache if we're returning something
+        # in once_only mode
+        out = (None if self._cached_time is None or
+               (self.expiry_time and
+                rospy.get_time() - self._cached_time > self.expiry_time) else
+               self._cached_data)
+        if self.once_only and out:
+            self._cached_data = None
+            self._cached_time = None
+        return out
 
     def _extra_setup(self, timeout):
         self._subscriber = rospy.Subscriber(self.topic_name, self.topic_class,
@@ -201,7 +223,9 @@ class SubscriberLeaf(Leaf):
         self._cached_data = msg
         self._cached_time = rospy.get_time()
 
+
 class SyncedSubscriberLeaf(Leaf):
+
     def __init__(self,
                  name,
                  topic_names,
@@ -211,10 +235,15 @@ class SyncedSubscriberLeaf(Leaf):
                  save=True,
                  *args,
                  **kwargs):
-        super(SyncedSubscriberLeaf, self).__init__(name, save=save, *args, **kwargs)
+        super(SyncedSubscriberLeaf, self).__init__(name,
+                                                   save=save,
+                                                   *args,
+                                                   **kwargs)
 
-        if not (isinstance(topic_names, list) or isinstance(topic_names, tuple)) or len(topic_names) != len(topic_classes):
-            raise ValueError('topic_names length does not equal topic_classes length')
+        if not (isinstance(topic_names, list) or isinstance(
+                topic_names, tuple)) or len(topic_names) != len(topic_classes):
+            raise ValueError(
+                'topic_names length does not equal topic_classes length')
 
         self.topic_names = topic_names
         self.topic_classes = topic_classes
@@ -233,13 +262,17 @@ class SyncedSubscriberLeaf(Leaf):
                rospy.get_time() - t < self.timeout):
             rospy.sleep(0.1)
         return (None if self._cached_time is None or
-                (self.expiry_time and rospy.get_time() - self._cached_time > self.expiry_time) else
+                (self.expiry_time and
+                 rospy.get_time() - self._cached_time > self.expiry_time) else
                 self._cached_data)
 
     def _extra_setup(self, timeout):
-        self._subscribers = [ message_filters.Subscriber(topic_name, self.topic_classes[idx]) 
-            for idx, topic_name in enumerate(self.topic_names) ]
-        self._filter = message_filters.ApproximateTimeSynchronizer(self._subscribers, 10, 0.1, allow_headerless=True)
+        self._subscribers = [
+            message_filters.Subscriber(topic_name, self.topic_classes[idx])
+            for idx, topic_name in enumerate(self.topic_names)
+        ]
+        self._filter = message_filters.ApproximateTimeSynchronizer(
+            self._subscribers, 10, 0.1, allow_headerless=True)
         self._filter.registerCallback(self.callback)
         return True
 
@@ -247,4 +280,3 @@ class SyncedSubscriberLeaf(Leaf):
         for idx, msg in enumerate(msgs):
             self._cached_data[idx] = msg
         self._cached_time = rospy.get_time()
-

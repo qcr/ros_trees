@@ -6,6 +6,10 @@
 
 # ROS Trees: Behaviour Trees for robotic systems
 
+[![QUT Centre for Robotics Open Source](https://github.com/qcr/qcr.github.io/raw/master/misc/badge.svg)](https://qcr.github.io)
+![Primary language](https://img.shields.io/github/languages/top/qcr/ros_trees)
+[![License](https://img.shields.io/github/license/qcr/ros_trees)](./LICENSE.txt)
+
 <p align="center">
   <img src="https://github.com/qcr/ros_trees/wiki/assets/frankie.gif" width="955" />
 </p>
@@ -20,9 +24,14 @@ ROS Trees makes behaviour trees accessible in ROS ecosystems, bringing all the c
 
 This package has been used on a number of real world robots, allowing us to combine a range of useful robot capabilities into significant robot behaviours. Featured works include:
 
-- [Holistic Mobile Manipulation](https://jhavl.github.io/holistic/) (shown above)
-- [Learning and executing re-usable behaviour trees from natural language instruction](https://arxiv.org/abs/2106.01650)
-- Australian Centre for Robotic Vision (ACRV) entry in the [2019 RoboCup@Home competition](https://2019.robocup.org/at-home-league.php)
+- [Holistic Mobile Manipulation](https://jhavl.github.io/holistic/) (shown above);
+- [a lunar rover demonstration](https://www.brisbanetimes.com.au/national/queensland/qut-rover-gets-its-eyes-for-being-part-of-nasa-moon-mission-20211202-p59e7y.html);
+- [a logistic robot prototype for space applications](https://www.qut.edu.au/news?id=177210);
+- [an autonomous robotic platform for greenhouses](https://research.qut.edu.au/qcr/Projects/autonomous-robotic-platforms-for-greenhouses/);
+- robot manipulators for industrial applications at the [Australian Cobotics Centre](https://www.australiancobotics.org/);
+- research results on [applying re-usable behaviour trees generated from natural language instruction](https://arxiv.org/abs/2106.01650);
+- multiple demonstrators of robot capabilities shown to QCR labe visitors; and
+- the Australian Centre for Robotic Vision (ACRV) entry in the [2019 RoboCup@Home competition](https://2019.robocup.org/at-home-league.php).
 
 We are always interested in hearing about where our software is used. If you've used ROS Trees in your work, we'd love to hear more about how it was used.
 
@@ -209,5 +218,6 @@ The `SubscriberLeaf` class defines four extra parameters:
 
 - **`topic_name`**: the name of the topic that the leaf will subscribe to (required)
 - **`topic_class`**: the type of message that leaf will expect to receive (required)
+- **`once_only`**: only new messages are returned from this leaf (no message will be returned twice)
 - **`expiry_time`**: the time after which a message is deemed to have expired and is deemed to old to be returned by the leaf (default = `None`). No value means all messages will be considered.
 - **`timeout`**: the max time the leaf will wait before declaring nothing was received (default=`3.0`)
