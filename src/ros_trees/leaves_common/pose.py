@@ -1,4 +1,5 @@
 import rospy
+import copy
 from tf.transformations import quaternion_from_euler, quaternion_multiply
 import tf2_ros
 import tf2_geometry_msgs
@@ -45,7 +46,7 @@ class TranslatePose(Leaf):
         return self.z
 
     def result_fn(self):
-        result = self._default_result_fn()
+        result = copy.deepcopy(self._default_result_fn())
 
         if not isinstance(result, PoseStamped):
             for key in result.__slots__:
@@ -53,7 +54,6 @@ class TranslatePose(Leaf):
                     result = getattr(result, key)
                     break
 
-        print(result)
         result.pose.position.x += self.x
         result.pose.position.y += self.y
         result.pose.position.z += self.height_fn()
@@ -64,7 +64,7 @@ class TranslatePose(Leaf):
         rotated = quaternion_multiply(current, rotation)
 
         result.pose.orientation = self.list_to_quaternion(rotated)
-        print(result)
+        
         return result
 
     def quaternion_to_list(self, quaternion):
