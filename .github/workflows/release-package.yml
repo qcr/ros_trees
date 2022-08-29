@@ -1,45 +1,61 @@
-name: Build
+# This is a QCR ROS debian creation pipeline for amd64, arm64 and arm32
+# Assumes the latest ubuntu for running the job (with ROS noetic (temp))
+name: Release ROS Debian(s)
 
+# Controls when the workflow will run
 on:
   release:
     types: [published]
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build:
-    runs-on: ${{ matrix.os }}
+  # This workflow contains a single job called "build"
+  release-build-action:
+    # The type of runner that the job will run on
+    # NOTE: the runner does not matter as the container pulls the correct codename and distro
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
-          - os: ubuntu-20.04
-            python-version: 3.8
-            ros-distro: noetic
+          - ros-distro: noetic
+            arch: amd64
+          - ros-distro: noetic
+            arch: arm64
+    name: Release-Build-Pipeline
+    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    - uses: actions/checkout@v2
-      with:
-        path: package
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install ROS
-      uses: suddrey-qut/setup-ros@master
-      with:
-        required-ros-distributions: ${{ matrix.ros-distro }}
-    - name: Build Release
-      uses: suddrey-qut/release-tools-ros@master
-      id: build
-      with:
-        ros-distro: ${{ matrix.ros-distro }}
-    - name: Upload binaries to release
-      uses: suddrey-qut/upload-release-action@master
-      id: upload
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        files: ${{ steps.build.outputs.files }}
-        tag: ${{ github.ref }}
-    - name : Notify QCR
-      uses: suddrey-qut/invoke-qcr-hook@master
-      with:
-        ref: ${{ github.ref }}
-        repo: ${{ github.repository }}
-        files: ${{ steps.upload.outputs.browser_download_urls }}
+      # Checks-out your repository into a workspace/src folder 
+      - name: Checkout Package
+        uses: actions/checkout@v2
+        with:
+          path: ws/src/${{ github.event.repository.name }}
+      # Required dependency for arm emulation
+      - name: Setup QEMU dependency
+        uses: docker/setup-qemu-action@v1
+      # Builds your packages within different architectures and distros (in matrix above)
+      - name: Run Release Workflow
+        id: build
+        uses: qcr/ros-debian-release-action@master
+        with:
+          architecture: ${{ matrix.arch }}
+          ros-distro: ${{ matrix.ros-distro }}
+      # Upload the debian binaries to your repo with the current tag
+      - name: Upload Binaries to Release
+        uses: suddrey-qut/upload-release-action@master
+        id: upload
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ steps.build.outputs.debian-files }}
+          tag: ${{ github.ref }}
+      # Notifies QCR for download
+      - name : Notify QCR
+        uses: suddrey-qut/invoke-qcr-hook@master
+        with:
+          release: ${{ steps.build.outputs.release }}
+          ref: ${{ github.ref }}
+          repo: ${{ github.repository }}
+          files: ${{ steps.upload.outputs.browser_download_urls }}
+          packages: ${{ steps.build.outputs.packages }}
