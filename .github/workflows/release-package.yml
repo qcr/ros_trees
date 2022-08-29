@@ -44,7 +44,7 @@ jobs:
           ros-distro: ${{ matrix.ros-distro }}
       # Upload the debian binaries to your repo with the current tag
       - name: Upload Binaries to Release
-        uses: suddrey-qut/upload-release-action@master
+        uses: qcr/upload-release-action@master
         id: upload
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -52,7 +52,7 @@ jobs:
           tag: ${{ github.ref }}
       # Notifies QCR for download
       - name : Notify QCR
-        uses: suddrey-qut/invoke-qcr-hook@master
+        uses: qcr/invoke-qcr-hook@master
         with:
           release: ${{ steps.build.outputs.release }}
           ref: ${{ github.ref }}
