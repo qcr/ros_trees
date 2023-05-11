@@ -1,5 +1,7 @@
 import py_trees as pt
 
+from rclpy.node import Node
+
 from . import data_management as dm
 from .debugging import DebugMode as DM
 
@@ -75,7 +77,7 @@ class Leaf(pt.behaviour.Behaviour):
     def _extra_initialise(self):
         pass
 
-    def _extra_setup(self, timeout):
+    def _extra_setup(self, **kwargs):
         return True
 
     def _extra_terminate(self, new_status):
@@ -102,13 +104,16 @@ class Leaf(pt.behaviour.Behaviour):
         self._extra_initialise()
         self.loaded_data = self.load_fn() if self.load else None
 
-    def setup(self, timeout):
+    def setup(self, **kwargs):
         # Handle logging & debugging
         self.logger.debug("%s.setup()" % self.__class__.__name__)
-        super(Leaf, self).setup(timeout)
+        super(Leaf, self).setup(kwargs=kwargs)
 
         # Call any extra setup steps (if not in debugging mode)
-        return (True if self.debug != DM.OFF else self._extra_setup(timeout))
+        if self.debug != DM.OFF:
+            return True
+        
+        return self._extra_setup(kwargs=kwargs)
 
     def terminate(self, new_status):
         # Handle logging

@@ -128,7 +128,9 @@ class BehaviourTree(ptr.trees.BehaviourTree):
             pt.logging.level = pt.logging.Level[log_level]
 
         # TODO should maybe not do setup every time... but eh
-        if not self.setup(timeout=setup_timeout):
+        try:
+            self.setup(timeout=setup_timeout)
+        except:
             self.root.logger.error(
                 "Failed to setup the \"%s\" tree. Aborting run..." %
                 self.tree_name)
@@ -137,26 +139,10 @@ class BehaviourTree(ptr.trees.BehaviourTree):
         # Run the tree indefinitely
         if push_to_start:
             input("Press Enter to start the \"%s\" tree..." % self.tree_name)
-        else:
-            print("Running \"%s\" tree..." % self.tree_name)
+            
+        print("Running \"%s\" tree..." % self.tree_name)
 
-        # The tick_tock method SLEEPS for period rather than maintaining a
-        # frequency... so instead we just implement the loop properly here
-        # self.tick_tock(1000 / hz)
-        rate = 1.0 / hz
-        while not self.interrupt_tick_tocking:
-            if (exit_on and self.root.status == exit_on):
-              break
-
-            t = timer()
-            self.tick(None, None)
-            remaining = rate - (timer() - t)
-            if remaining > 0:
-                try:
-                    time.sleep(remaining)
-                except KeyboardInterrupt:
-                    break
-        self.interrupt_tick_tocking = False
+        self.tick_tock(period_ms=(1000 / hz))
 
     def visualise(self, image_type='svg'):
         if image_type not in ['svg', 'png']:
