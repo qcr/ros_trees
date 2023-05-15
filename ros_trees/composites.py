@@ -11,7 +11,7 @@ class MemoryParallel(Parallel):
 
     def __init__(self,
                  name="Memory Parallel",
-                 policy=common.ParallelPolicy.SUCCESS_ON_ALL,
+                 policy=common.ParallelPolicy.SuccessOnAll,
                  children=None,
                  *args,
                  **kwargs):
@@ -37,10 +37,10 @@ class MemoryParallel(Parallel):
         if any([c.status == Status.FAILURE for c in self.children]):
             new_status = Status.FAILURE
         else:
-            if self.policy == common.ParallelPolicy.SUCCESS_ON_ALL:
+            if self.policy == common.ParallelPolicy.SuccessOnAll:
                 if all([c.status == Status.SUCCESS for c in self.children]):
                     new_status = Status.SUCCESS
-            elif self.policy == common.ParallelPolicy.SUCCESS_ON_ONE:
+            elif self.policy == common.ParallelPolicy.SuccessOnOne:
                 if any([c.status == Status.SUCCESS for c in self.children]):
                     new_status = Status.SUCCESS
         # special case composite - this parallel may have children that are still running

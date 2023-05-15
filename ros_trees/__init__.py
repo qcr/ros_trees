@@ -6,6 +6,5 @@ from . import leaves_ros
 from . import trees
 
 __all__ = [
-    'data_management', 'debugging', 'composites', 'leaves', 'leaves_ros',
-    'trees'
+    'data_management', 'debugging', 'composites', 'leaves', 'leaves_ros', 'trees'
 ]

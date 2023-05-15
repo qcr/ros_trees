@@ -1,5 +1,7 @@
 import py_trees as pt
 
+from rclpy.node import Node
+
 from . import data_management as dm
 from .debugging import DebugMode as DM
 
@@ -75,7 +77,7 @@ class Leaf(pt.behaviour.Behaviour):
     def _extra_initialise(self):
         pass
 
-    def _extra_setup(self, timeout):
+    def _extra_setup(self, **kwargs):
         return True
 
     def _extra_terminate(self, new_status):
@@ -102,13 +104,16 @@ class Leaf(pt.behaviour.Behaviour):
         self._extra_initialise()
         self.loaded_data = self.load_fn() if self.load else None
 
-    def setup(self, timeout):
+    def setup(self, **kwargs):
         # Handle logging & debugging
         self.logger.debug("%s.setup()" % self.__class__.__name__)
-        super(Leaf, self).setup(timeout)
+        super(Leaf, self).setup(**kwargs)
 
         # Call any extra setup steps (if not in debugging mode)
-        return (True if self.debug != DM.OFF else self._extra_setup(timeout))
+        if self.debug != DM.OFF:
+            return True
+        
+        return self._extra_setup(**kwargs)
 
     def terminate(self, new_status):
         # Handle logging
@@ -126,10 +131,10 @@ class Leaf(pt.behaviour.Behaviour):
             ('INPUT' in self.debug.name and self._debug_key_received)):
             self.logger.info("%s.update(): Skipping \"%s\"" %
                              (self.__class__.__name__, self.name))
-            return (pt.Status.SUCCESS
-                    if 'SUCCESS' in self.debug.name else pt.Status.FAILURE)
+            return (pt.common.Status.SUCCESS
+                    if 'SUCCESS' in self.debug.name else pt.common.Status.FAILURE)
         elif ('INPUT' in self.debug.name):
-            return pt.Status.RUNNING
+            return pt.common.Status.RUNNING
 
         # Call any extra parts of the update step
         ret = self._extra_update()  # pylint: disable=assignment-from-none
@@ -148,10 +153,10 @@ class Leaf(pt.behaviour.Behaviour):
                 self.save_fn(result)
 
             # Evaluate the result and act accordingly
-            ret = (pt.Status.SUCCESS
-                   if self.eval_fn(result) else pt.Status.FAILURE)
+            ret = (self.status.SUCCESS
+                   if self.eval_fn(result) else pt.common.Status.FAILURE)
             self.feedback_message = "finished with %s" % ret.name
             return ret
         else:
             self.feedback_message = "running..."
-            return pt.Status.RUNNING
+            return pt.common.Status.RUNNING

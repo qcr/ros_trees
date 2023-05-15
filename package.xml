@@ -1,7 +1,8 @@
 <?xml version="1.0"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>ros_trees</name>
-  <version>1.1.0</version>
+  <version>1.1.0</version> <!-- Should match setup.py -->
   <description>The ros_trees package</description>
 
   <author>Ben Talbot</author>
@@ -11,11 +12,11 @@
 
   <url type="website">https://github.com/qcr/ros_trees</url>
 
-  <buildtool_depend>catkin</buildtool_depend>
-  <exec_depend>rospy</exec_depend>
-  <exec_depend>py_trees</exec_depend>
-  <exec_depend>py_trees_ros</exec_depend>
+  <depend>rclpy</depend>
+  <depend>py_trees</depend>
+  <depend>py_trees_ros</depend>
 
   <export>
+    <build_type>ament_python</build_type>
   </export>
 </package>
