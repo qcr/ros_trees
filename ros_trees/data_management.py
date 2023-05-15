@@ -38,8 +38,9 @@ def auto_generate(data, obj_class, empty_if_not_found=True, breakdown=True):
 
     # Get a list of field types for the requested class
     obj_inst = obj_class()
+    keywords = obj_class.__dict__['__slots__']
     field_types = [
-        getattr(obj_inst, a).__class__ for a in obj_class.__dict__['__slots__']
+        getattr(obj_inst, a).__class__ for a in keywords
     ]
 
     # Extract field values list from whatever mess of data we have been
@@ -77,9 +78,18 @@ def auto_generate(data, obj_class, empty_if_not_found=True, breakdown=True):
         # we still ended up with none...)
         obj_values.append(t() if v is None else v)
         field_gens[t] = (v for v in field_matches[t]) if v is None else g
+    
+    kwargs = dict()
+    for i in range(len(obj_values)):
+        keyword = keywords[i]
+
+        if keyword.startswith('_'):
+            keyword = keyword[1:]
+        
+        kwargs[keyword] = obj_values[i]
 
     # Return an object created from the field values
-    return obj_class(*obj_values)
+    return obj_class(**kwargs)
 
 
 def get_last_value(leaf=None):
@@ -96,7 +106,7 @@ def get_last_value(leaf=None):
             leaf_old = leaf
             leaf = _get_previous_leaf(leaf_old)
 
-            if leaf and leaf.status == pt.Status.INVALID:
+            if leaf and leaf.status == pt.common.Status.INVALID:
               continue
 
             result = get_value(_get_last_result_key(leaf))
@@ -113,7 +123,7 @@ def get_value_field(key_name, num=0):
 
 def get_value(key_name):
     # Returns None if there is no key matching key_name
-    return pt.Blackboard().get(
+    return pt.blackboard.Blackboard.get(
         LAST_RESULT_KEY if key_name is None else key_name)
 
 
@@ -126,7 +136,7 @@ def set_last_value(leaf, value):
 
 
 def set_value(key_name, value):
-    pt.Blackboard().set(key_name, value)
+    pt.blackboard.Blackboard().set(key_name, value)
 
 
 def to_fields_list(obj):

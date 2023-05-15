@@ -107,13 +107,13 @@ class Leaf(pt.behaviour.Behaviour):
     def setup(self, **kwargs):
         # Handle logging & debugging
         self.logger.debug("%s.setup()" % self.__class__.__name__)
-        super(Leaf, self).setup(kwargs=kwargs)
+        super(Leaf, self).setup(**kwargs)
 
         # Call any extra setup steps (if not in debugging mode)
         if self.debug != DM.OFF:
             return True
         
-        return self._extra_setup(kwargs=kwargs)
+        return self._extra_setup(**kwargs)
 
     def terminate(self, new_status):
         # Handle logging
@@ -131,10 +131,10 @@ class Leaf(pt.behaviour.Behaviour):
             ('INPUT' in self.debug.name and self._debug_key_received)):
             self.logger.info("%s.update(): Skipping \"%s\"" %
                              (self.__class__.__name__, self.name))
-            return (pt.Status.SUCCESS
-                    if 'SUCCESS' in self.debug.name else pt.Status.FAILURE)
+            return (pt.common.Status.SUCCESS
+                    if 'SUCCESS' in self.debug.name else pt.common.Status.FAILURE)
         elif ('INPUT' in self.debug.name):
-            return pt.Status.RUNNING
+            return pt.common.Status.RUNNING
 
         # Call any extra parts of the update step
         ret = self._extra_update()  # pylint: disable=assignment-from-none
@@ -153,10 +153,10 @@ class Leaf(pt.behaviour.Behaviour):
                 self.save_fn(result)
 
             # Evaluate the result and act accordingly
-            ret = (pt.Status.SUCCESS
-                   if self.eval_fn(result) else pt.Status.FAILURE)
+            ret = (self.status.SUCCESS
+                   if self.eval_fn(result) else pt.common.Status.FAILURE)
             self.feedback_message = "finished with %s" % ret.name
             return ret
         else:
             self.feedback_message = "running..."
-            return pt.Status.RUNNING
+            return pt.common.Status.RUNNING

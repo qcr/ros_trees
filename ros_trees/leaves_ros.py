@@ -26,9 +26,7 @@ class ActionLeaf(Leaf):
 
     def _default_load_fn(self, auto_generate=True):
         if auto_generate:
-            return dm.auto_generate(
-                super(ActionLeaf, self)._default_load_fn(),
-                type(self._action_class().action_goal.goal))
+            return dm.auto_generate(super(ActionLeaf, self)._default_load_fn(), self._action_class.Goal)
         else:
             return super(ActionLeaf, self)._default_load_fn()
 
@@ -51,7 +49,7 @@ class ActionLeaf(Leaf):
                     self.action_namespace))
 
         # Confirm the action client is actually there
-        if not self._action_client.wait_for_server(rclpy.Duration(timeout)):
+        if not self._action_client.wait_for_server(timeout_sec=5.0):
             self.logger.error(
                 "%s.setup() could connect to Action Server with name \"%s\"" %
                 (self.name, self.action_namespace))
@@ -89,9 +87,7 @@ class PublisherLeaf(Leaf):
 
     def _default_load_fn(self, auto_generate=True):
         if auto_generate:
-            return dm.auto_generate(
-                super(PublisherLeaf, self)._default_load_fn(),
-                self.topic_class)
+            return dm.auto_generate(super(PublisherLeaf, self)._default_load_fn(), self.topic_class)
         else:
             return super(PublisherLeaf, self)._default_load_fn()
 
@@ -122,22 +118,26 @@ class ServiceLeaf(Leaf):
         self.service_name = service_name
         self._service_class = service_class
         self._service_client = None
+        self._future = None
 
     def _default_load_fn(self, auto_generate=True):
         if auto_generate:
-            return dm.auto_generate(
-                super(ServiceLeaf, self)._default_load_fn(),
-                self._service_class.Request.__class__)
+            return dm.auto_generate(super(ServiceLeaf, self)._default_load_fn(), self._service_class.Request)
         else:
             return super(ServiceLeaf, self)._default_load_fn()
+    
+    def _extra_update(self):
+        if (self._future is None):
+            self._future = self._service_client.call_async(self.loaded_data)
 
-    def _default_result_fn(self, custom_data=None):
-        try:
-            return self._service_client(
-                custom_data if custom_data is not None else self.loaded_data)
-        except Exception as e:
-            self.logger.error("%s.result_fn(): %s" % (self.name, e))
-            return None
+    def _default_result_fn(self):
+        result = self._future.result()
+        self._future = None
+        return result
+        
+    def _is_leaf_done(self):
+        future_done = self._future is None or self._future.done()
+        return super()._is_leaf_done() and future_done
 
     def _extra_setup(self, **kwargs):
         self.node = kwargs['node']
@@ -172,9 +172,9 @@ class SubscriberLeaf(Leaf):
 
         # While we don't have a valid message, keep waiting
         while ((self._cached_time is None or
-                (self.expiry_time is not None and
-                 self.node.get_clock().now() - self._cached_time > self.expiry_time)) and
-               self.node.get_clock().now() - t < self.timeout):
+            (self.expiry_time is not None and
+            self.node.get_clock().now() - self._cached_time > self.expiry_time)) and
+            self.node.get_clock().now() - t < self.timeout):
             sleep(0.1)
 
         # Return what we found, dumping the cache if we're returning something
@@ -190,8 +190,7 @@ class SubscriberLeaf(Leaf):
 
     def _extra_setup(self, **kwargs):
         self.node = kwargs['node']
-        self._subscriber = self.node.create_subscription(
-            self.topic_class, self.topic_name, self.callback)
+        self._subscriber = self.node.create_subscription(self.topic_class, self.topic_name, self.callback)
         return True
 
     def callback(self, msg):
@@ -204,10 +203,8 @@ class SyncedSubscriberLeaf(Leaf):
     def __init__(self, name, topic_names, topic_classes, expiry_time=None, timeout=3.0, save=True, *args, **kwargs):
         Leaf.__init__(self, name=name, save=save, *args, **kwargs)
 
-        if not (isinstance(topic_names, list) or isinstance(
-                topic_names, tuple)) or len(topic_names) != len(topic_classes):
-            raise ValueError(
-                'topic_names length does not equal topic_classes length')
+        if not (isinstance(topic_names, list) or isinstance(topic_names, tuple)) or len(topic_names) != len(topic_classes):
+            raise ValueError('topic_names length does not equal topic_classes length')
 
         self.node = None
         self.topic_names = topic_names

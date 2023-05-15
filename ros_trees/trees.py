@@ -130,10 +130,11 @@ class BehaviourTree(ptr.trees.BehaviourTree):
         # TODO should maybe not do setup every time... but eh
         try:
             self.setup(timeout=setup_timeout)
-        except:
+        except Exception as e:
             self.root.logger.error(
                 "Failed to setup the \"%s\" tree. Aborting run..." %
                 self.tree_name)
+            self.root.logger.error(e)
             return False
 
         # Run the tree indefinitely
@@ -143,6 +144,7 @@ class BehaviourTree(ptr.trees.BehaviourTree):
         print("Running \"%s\" tree..." % self.tree_name)
 
         self.tick_tock(period_ms=(1000 / hz))
+        return True
 
     def visualise(self, image_type='svg'):
         if image_type not in ['svg', 'png']:
