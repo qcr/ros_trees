@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>ros_trees</name>
-  <version>1.1.0</version> <!-- Should match setup.py -->
+  <version>1.1.0</version>
   <description>The ros_trees package</description>
 
   <author>Ben Talbot</author>
@@ -12,11 +12,13 @@
 
   <url type="website">https://github.com/qcr/ros_trees</url>
 
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
+
   <depend>rclpy</depend>
   <depend>py_trees</depend>
   <depend>py_trees_ros</depend>
 
   <export>
-    <build_type>ament_python</build_type>
+    <build_type>ament_cmake</build_type>
   </export>
 </package>
