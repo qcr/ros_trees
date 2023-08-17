@@ -85,10 +85,11 @@ class ActionLeaf(Leaf):
 
 class PublisherLeaf(Leaf):
 
-    def __init__(self, name, topic_name, topic_class, *args, **kwargs):
+    def __init__(self, name, topic_name, topic_class, queue_size=10, *args, **kwargs):
         super(PublisherLeaf, self).__init__(name, *args, **kwargs)
         self.topic_name = topic_name
         self.topic_class = topic_class
+        self.queue_size = queue_size
         self._publisher = None
 
     def _default_load_fn(self, auto_generate=True):
@@ -118,7 +119,7 @@ class PublisherLeaf(Leaf):
 
         self._publisher = rospy.Publisher(self.topic_name,
                                           self.topic_class,
-                                          queue_size=10)
+                                          queue_size=self.queue_size)
 
         while (self._publisher.get_num_connections() == 0 and
                (timeout == 0 or rospy.get_time() - t < timeout)):
