@@ -148,8 +148,11 @@ class Leaf(pt.behaviour.Behaviour):
                 self.save_fn(result)
 
             # Evaluate the result and act accordingly
-            ret = (pt.Status.SUCCESS
-                   if self.eval_fn(result) else pt.Status.FAILURE)
+            eval_result = self.eval_fn(result)
+            if eval_result is None:
+                return pt.Status.INVALID
+            else:
+                ret = (pt.Status.SUCCESS if self.eval_fn(result) else pt.Status.FAILURE)
             self.feedback_message = "finished with %s" % ret.name
             return ret
         else:
